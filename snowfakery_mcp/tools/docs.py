@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from typing import Any
+from importlib import resources
 
 from mcp.server.fastmcp import FastMCP
 
@@ -14,8 +15,20 @@ def register_doc_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
     def get_schema() -> dict[str, Any]:
         """Return the Snowfakery recipe JSON schema used for authoring/validation."""
 
-        schema_path = paths.root / "Snowfakery" / "schema" / "snowfakery_recipe.jsonschema.json"
-        return {"uri": "snowfakery://schema/recipe-jsonschema", "schema": read_text_utf8(schema_path)}
+        schema_path = (
+            paths.root
+            / "Snowfakery"
+            / "schema"
+            / "snowfakery_recipe.jsonschema.json"
+        )
+        if schema_path.exists():
+            schema_text = read_text_utf8(schema_path)
+        else:
+            schema_text = resources.files("snowfakery_mcp.schema").joinpath(
+                "snowfakery_recipe.jsonschema.json"
+            ).read_text(encoding="utf-8")
+
+        return {"uri": "snowfakery://schema/recipe-jsonschema", "schema": schema_text}
 
     @mcp.tool()
     def search_docs(query: str, limit: int = 20) -> dict[str, Any]:

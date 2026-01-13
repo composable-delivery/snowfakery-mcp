@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from importlib import resources
 
 from mcp.server.fastmcp import FastMCP
 
@@ -12,8 +13,21 @@ from snowfakery_mcp.core.text import read_text_utf8
 def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
     @mcp.resource("snowfakery://schema/recipe-jsonschema")
     def recipe_schema_resource() -> str:
-        schema_path = paths.root / "Snowfakery" / "schema" / "snowfakery_recipe.jsonschema.json"
-        return read_text_utf8(schema_path)
+        # Prefer the Snowfakery submodule if present (dev mode), but fall back
+        # to the bundled copy when installed from a wheel or when submodules
+        # are not checked out in CI.
+        schema_path = (
+            paths.root
+            / "Snowfakery"
+            / "schema"
+            / "snowfakery_recipe.jsonschema.json"
+        )
+        if schema_path.exists():
+            return read_text_utf8(schema_path)
+
+        return resources.files("snowfakery_mcp.schema").joinpath(
+            "snowfakery_recipe.jsonschema.json"
+        ).read_text(encoding="utf-8")
 
     @mcp.resource("snowfakery://docs/index")
     def docs_index_resource() -> str:
