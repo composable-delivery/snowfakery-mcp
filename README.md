@@ -13,6 +13,12 @@ Install dependencies and run the MCP server over stdio:
 - `uv sync`
 - `uv run snowfakery-mcp`
 
+Install from releases / PyPI:
+
+- Recommended (isolated): `pipx install snowfakery-mcp`
+- Or: `python -m pip install snowfakery-mcp`
+- Then run: `snowfakery-mcp`
+
 ## What’s included (MVP)
 
 - Resources:
@@ -72,4 +78,11 @@ Quick summaries (when JSON is huge):
 - Dump a log then summarize it:
 	- `uv run inspect log dump logs/<file>.eval > out.json`
 	- `uv run python evals/summarize_log.py out.json`
+
+## Releases
+
+GitHub Releases attach:
+
+- Python sdist + wheel in `dist/`
+- An experimental `.mcpb` bundle (a ZIP with metadata + example config)
 
