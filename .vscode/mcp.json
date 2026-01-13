@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"snowfakery": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"run",
+				"snowfakery-mcp"
+			]
+		}
+	},
+	"inputs": []
+}

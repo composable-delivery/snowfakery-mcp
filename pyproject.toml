@@ -1,0 +1,47 @@
+[project]
+name = "snowfakery-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.2.0",
+    "openai>=2.15.0",
+    "snowfakery>=4.2.1",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "pytest-anyio>=0.0.0",
+    "pytest-cov>=7.0.0",
+]
+evals = ["inspect-ai>=0.3.160"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[project.scripts]
+snowfakery-mcp = "snowfakery_mcp.server:run"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["snowfakery_mcp"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+
+# External libraries may not ship full typing.
+[[tool.mypy.overrides]]
+module = ["mcp.*", "snowfakery.*"]
+ignore_missing_imports = true

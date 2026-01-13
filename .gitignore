@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Eval logs
+logs/
+
+# MCP logs
+.snowfakery-mcp/
+
 # Distribution / packaging
 .Python
 build/

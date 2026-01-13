@@ -1,0 +1,3794 @@
+{
+  "version": 2,
+  "status": "success",
+  "eval": {
+    "eval_id": "Eu7BNHLifNdvLfDuqzKC5A",
+    "run_id": "ZVEwG5ZQuHco5a69WRhTJS",
+    "created": "2026-01-13T08:46:00+00:00",
+    "task": "snowfakery_mcp_agentic",
+    "task_id": "eNTN68TPy2vQFCXFakD3MV",
+    "task_version": 0,
+    "task_file": "evals/inspect_tasks.py",
+    "task_display_name": "snowfakery_mcp_agentic",
+    "task_registry_name": "snowfakery_mcp_agentic",
+    "task_attribs": {},
+    "task_args": {},
+    "task_args_passed": {},
+    "solver_args_passed": {},
+    "dataset": {
+      "samples": 4,
+      "sample_ids": [
+        "debug_broken_reference"
+      ],
+      "shuffled": false
+    },
+    "model": "openai/gpt-5-mini",
+    "model_generate_config": {},
+    "model_base_url": "https://models.inference.ai.azure.com",
+    "model_args": {
+      "responses_api": false
+    },
+    "model_roles": {},
+    "config": {
+      "limit": 1,
+      "epochs": 1,
+      "epochs_reducer": [
+        "mean"
+      ],
+      "fail_on_error": true,
+      "continue_on_fail": false,
+      "sandbox_cleanup": true,
+      "log_samples": true,
+      "log_realtime": true,
+      "log_images": true,
+      "log_shared": 0,
+      "score_display": true
+    },
+    "revision": {
+      "type": "git",
+      "origin": "https://github.com/composable-delivery/snowfakery-mcp",
+      "commit": "2091d45",
+      "dirty": true
+    },
+    "packages": {
+      "inspect_ai": "0.3.160"
+    },
+    "scorers": [
+      {
+        "name": "snowfakery_mcp_recipe",
+        "options": {},
+        "metrics": [],
+        "metadata": {}
+      }
+    ]
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [
+      {
+        "solver": "system_message",
+        "params": {
+          "template": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call {submit} and provide ONLY the final Snowfakery recipe YAML.\n",
+          "params": {
+            "submit": "submit"
+          }
+        },
+        "params_passed": {
+          "template": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call {submit} and provide ONLY the final Snowfakery recipe YAML.\n",
+          "params": {
+            "submit": "submit"
+          }
+        }
+      },
+      {
+        "solver": "use_tools",
+        "params": {
+          "tools": [
+            null
+          ],
+          "tool_choice": "auto",
+          "append": false
+        },
+        "params_passed": {
+          "tools": [
+            null
+          ]
+        }
+      },
+      {
+        "solver": "submit_tool",
+        "params": {},
+        "params_passed": {}
+      },
+      {
+        "solver": "basic_agent_loop",
+        "params": {},
+        "params_passed": {}
+      }
+    ],
+    "config": {}
+  },
+  "results": {
+    "total_samples": 1,
+    "completed_samples": 1,
+    "scores": [
+      {
+        "name": "snowfakery_mcp_recipe",
+        "scorer": "snowfakery_mcp_recipe",
+        "scored_samples": 1,
+        "unscored_samples": 0,
+        "params": {},
+        "metrics": {}
+      }
+    ]
+  },
+  "stats": {
+    "started_at": "2026-01-13T08:46:00+00:00",
+    "completed_at": "2026-01-13T08:46:12+00:00",
+    "model_usage": {
+      "openai/gpt-5-mini": {
+        "input_tokens": 2642,
+        "output_tokens": 419,
+        "total_tokens": 3061,
+        "input_tokens_cache_read": 0,
+        "reasoning_tokens": 192
+      }
+    }
+  },
+  "invalidated": false,
+  "samples": [
+    {
+      "id": "debug_broken_reference",
+      "epoch": 1,
+      "input": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+      "target": "",
+      "messages": [
+        {
+          "id": "CSC69GQyXCTTcazJjB87cx",
+          "content": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call submit and provide ONLY the final Snowfakery recipe YAML.\n",
+          "role": "system"
+        },
+        {
+          "id": "7eb4PTCCLRGLNiattCWP2Y",
+          "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+          "source": "input",
+          "role": "user"
+        },
+        {
+          "id": "GRnJTDXVQVF2hUbM7HHkAo",
+          "content": "",
+          "source": "generate",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+              "function": "validate_recipe",
+              "arguments": {
+                "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+                "strict_mode": true
+              },
+              "type": "function"
+            }
+          ],
+          "model": "gpt-5-mini-2025-08-07"
+        },
+        {
+          "id": "oHkq64Z7zzrqDbUzBj2uzr",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"kind\": \"DataGenValidationError\",\n      \"message\": \"reference: Unknown object/nickname 'Accounts'. Did you mean 'Account'?\",\n      \"filename\": null,\n      \"line\": null\n    }\n  ]\n}"
+            }
+          ],
+          "role": "tool",
+          "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+          "function": "validate_recipe"
+        },
+        {
+          "id": "2tntqVrsz7sU9DFMxTMGnA",
+          "content": "",
+          "source": "generate",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+              "function": "validate_recipe",
+              "arguments": {
+                "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+                "strict_mode": true
+              },
+              "type": "function"
+            }
+          ],
+          "model": "gpt-5-mini-2025-08-07"
+        },
+        {
+          "id": "XudpSP3MSY9kCbYHtAy62c",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"valid\": true,\n  \"errors\": []\n}"
+            }
+          ],
+          "role": "tool",
+          "tool_call_id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+          "function": "validate_recipe"
+        },
+        {
+          "id": "EsrfZeEzRf5EUGtEyGJCJ2",
+          "content": "",
+          "source": "generate",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+              "function": "submit",
+              "arguments": {
+                "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+              },
+              "type": "function"
+            }
+          ],
+          "model": "gpt-5-mini-2025-08-07"
+        },
+        {
+          "id": "ACYa7GmqXSzmJDndCBFWcg",
+          "content": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+          "role": "tool",
+          "tool_call_id": "call_G6OfOLettIbKloaMBsdGdZK6",
+          "function": "submit"
+        }
+      ],
+      "output": {
+        "model": "gpt-5-mini-2025-08-07",
+        "choices": [
+          {
+            "message": {
+              "id": "EsrfZeEzRf5EUGtEyGJCJ2",
+              "content": "",
+              "source": "generate",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                  "function": "submit",
+                  "arguments": {
+                    "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+                  },
+                  "type": "function"
+                }
+              ],
+              "model": "gpt-5-mini-2025-08-07"
+            },
+            "stop_reason": "tool_calls"
+          }
+        ],
+        "completion": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+        "usage": {
+          "input_tokens": 994,
+          "output_tokens": 67,
+          "total_tokens": 1061,
+          "input_tokens_cache_read": 0,
+          "reasoning_tokens": 0
+        },
+        "time": 1.1947738449998724
+      },
+      "scores": {
+        "snowfakery_mcp_recipe": {
+          "value": false,
+          "explanation": "Missing required tool calls: ['run_recipe']",
+          "metadata": {
+            "missing_tool_calls": [
+              "run_recipe"
+            ],
+            "tool_calls": [
+              "validate_recipe",
+              "validate_recipe",
+              "submit"
+            ]
+          },
+          "history": []
+        }
+      },
+      "metadata": {
+        "must_contain": [
+          "Account",
+          "Contact"
+        ],
+        "must_call_tools": [
+          "validate_recipe",
+          "run_recipe"
+        ],
+        "must_output_substrings": [
+          "Account(",
+          "Contact(",
+          "AccountId="
+        ]
+      },
+      "store": {},
+      "events": [
+        {
+          "uuid": "cXMihjoJJd5XtcrxuERiaF",
+          "span_id": "d2435a9532ec4873aab4222e800dda72",
+          "timestamp": "2026-01-13T08:46:00.911598+00:00",
+          "working_start": 6959.65922704,
+          "event": "span_begin",
+          "id": "d2435a9532ec4873aab4222e800dda72",
+          "type": "init",
+          "name": "init"
+        },
+        {
+          "uuid": "izB7Whzc8btjeoyUbG95Ru",
+          "span_id": "d2435a9532ec4873aab4222e800dda72",
+          "timestamp": "2026-01-13T08:46:00.912600+00:00",
+          "working_start": 6959.66022824,
+          "event": "sample_init",
+          "sample": {
+            "input": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+            "target": "",
+            "id": "debug_broken_reference",
+            "metadata": {
+              "must_contain": [
+                "Account",
+                "Contact"
+              ],
+              "must_call_tools": [
+                "validate_recipe",
+                "run_recipe"
+              ],
+              "must_output_substrings": [
+                "Account(",
+                "Contact(",
+                "AccountId="
+              ]
+            }
+          },
+          "state": {
+            "messages": [
+              {
+                "id": "7eb4PTCCLRGLNiattCWP2Y",
+                "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+                "source": "input",
+                "role": "user"
+              }
+            ],
+            "tools": [],
+            "tool_choice": null,
+            "store": {},
+            "output": {
+              "model": "openai/gpt-5-mini",
+              "choices": [],
+              "completion": ""
+            },
+            "completed": false,
+            "metadata": {
+              "must_contain": [
+                "Account",
+                "Contact"
+              ],
+              "must_call_tools": [
+                "validate_recipe",
+                "run_recipe"
+              ],
+              "must_output_substrings": [
+                "Account(",
+                "Contact(",
+                "AccountId="
+              ]
+            }
+          }
+        },
+        {
+          "uuid": "TZW6eC8MNni2pYvfE2bRLr",
+          "span_id": "d2435a9532ec4873aab4222e800dda72",
+          "timestamp": "2026-01-13T08:46:00.913428+00:00",
+          "working_start": 6959.661056647,
+          "event": "span_end",
+          "id": "d2435a9532ec4873aab4222e800dda72"
+        },
+        {
+          "uuid": "9hkvAES29nwxdjxk8EshUc",
+          "span_id": "f2737a68be914649befdd0ecdf3de37f",
+          "timestamp": "2026-01-13T08:46:00.915107+00:00",
+          "working_start": 0.0009661350004535052,
+          "event": "span_begin",
+          "id": "f2737a68be914649befdd0ecdf3de37f",
+          "type": "solvers",
+          "name": "solvers"
+        },
+        {
+          "uuid": "CgWJQzxgkMkZZ6Wu98FXeN",
+          "span_id": "15d83b5a69f74fe38987955c1a51fa95",
+          "timestamp": "2026-01-13T08:46:00.916209+00:00",
+          "working_start": 0.002068403000521357,
+          "event": "span_begin",
+          "id": "15d83b5a69f74fe38987955c1a51fa95",
+          "parent_id": "f2737a68be914649befdd0ecdf3de37f",
+          "type": "solver",
+          "name": "system_message"
+        },
+        {
+          "uuid": "c8fwxJgeRNqF7BkzSso4Wm",
+          "span_id": "15d83b5a69f74fe38987955c1a51fa95",
+          "timestamp": "2026-01-13T08:46:00.917917+00:00",
+          "working_start": 0.003775883000344038,
+          "event": "state",
+          "changes": [
+            {
+              "op": "remove",
+              "path": "/messages/0/source"
+            },
+            {
+              "op": "replace",
+              "path": "/messages/0/content",
+              "value": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call submit and provide ONLY the final Snowfakery recipe YAML.\n",
+              "replaced": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n"
+            },
+            {
+              "op": "replace",
+              "path": "/messages/0/id",
+              "value": "CSC69GQyXCTTcazJjB87cx",
+              "replaced": "7eb4PTCCLRGLNiattCWP2Y"
+            },
+            {
+              "op": "replace",
+              "path": "/messages/0/role",
+              "value": "system",
+              "replaced": "user"
+            },
+            {
+              "op": "add",
+              "path": "/messages/1",
+              "value": {
+                "id": "7eb4PTCCLRGLNiattCWP2Y",
+                "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+                "source": "input",
+                "role": "user"
+              }
+            }
+          ]
+        },
+        {
+          "uuid": "C6FkMbUjzJz6T5hhtePsFh",
+          "span_id": "15d83b5a69f74fe38987955c1a51fa95",
+          "timestamp": "2026-01-13T08:46:00.918791+00:00",
+          "working_start": 0.0046504760002790135,
+          "event": "span_end",
+          "id": "15d83b5a69f74fe38987955c1a51fa95"
+        },
+        {
+          "uuid": "8h4LxkeGq3cuZ252Qm82Gn",
+          "span_id": "13371abc7a424d4c95c6d588200f8b3b",
+          "timestamp": "2026-01-13T08:46:00.919363+00:00",
+          "working_start": 0.005221993000304792,
+          "event": "span_begin",
+          "id": "13371abc7a424d4c95c6d588200f8b3b",
+          "parent_id": "f2737a68be914649befdd0ecdf3de37f",
+          "type": "solver",
+          "name": "use_tools"
+        },
+        {
+          "uuid": "9BSHZumEkys5kJQBu8g3DU",
+          "span_id": "13371abc7a424d4c95c6d588200f8b3b",
+          "timestamp": "2026-01-13T08:46:01.993801+00:00",
+          "working_start": 1.0796637090006698,
+          "event": "state",
+          "changes": [
+            {
+              "op": "add",
+              "path": "/tools/0",
+              "value": {
+                "name": "list_examples",
+                "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "prefix": {
+                      "description": "prefix",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "add",
+              "path": "/tools/1",
+              "value": {
+                "name": "get_example",
+                "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "name"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "add",
+              "path": "/tools/2",
+              "value": {
+                "name": "validate_recipe",
+                "description": "Validate a recipe using Snowfakery's validate-only mode.\n\n        Note: schema_validate is reserved for adding JSON-schema validation later.\n        ",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "recipe_path": {
+                      "description": "recipe_path",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "recipe_text": {
+                      "description": "recipe_text",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "strict_mode": {
+                      "type": "boolean",
+                      "description": "strict_mode",
+                      "default": true
+                    },
+                    "schema_validate": {
+                      "type": "boolean",
+                      "description": "schema_validate",
+                      "default": false
+                    },
+                    "options": {
+                      "description": "options",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "plugin_options": {
+                      "description": "plugin_options",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "add",
+              "path": "/tools/3",
+              "value": {
+                "name": "analyze_recipe",
+                "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "recipe_path": {
+                      "description": "recipe_path",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "recipe_text": {
+                      "description": "recipe_text",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "add",
+              "path": "/tools/4",
+              "value": {
+                "name": "run_recipe",
+                "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "recipe_path": {
+                      "description": "recipe_path",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "recipe_text": {
+                      "description": "recipe_text",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "options": {
+                      "description": "options",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "plugin_options": {
+                      "description": "plugin_options",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "reps": {
+                      "description": "reps",
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "target_number": {
+                      "description": "target_number",
+                      "anyOf": [
+                        {},
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "description": "output_format",
+                      "default": "txt"
+                    },
+                    "capture_output": {
+                      "type": "boolean",
+                      "description": "capture_output",
+                      "default": true
+                    },
+                    "strict_mode": {
+                      "type": "boolean",
+                      "description": "strict_mode",
+                      "default": true
+                    },
+                    "validate_only": {
+                      "type": "boolean",
+                      "description": "validate_only",
+                      "default": false
+                    },
+                    "generate_continuation": {
+                      "type": "boolean",
+                      "description": "generate_continuation",
+                      "default": false
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "add",
+              "path": "/tools/5",
+              "value": {
+                "name": "generate_mapping",
+                "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "recipe_path": {
+                      "description": "recipe_path",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "recipe_text": {
+                      "description": "recipe_text",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "load_declarations_paths": {
+                      "description": "load_declarations_paths",
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "op": "replace",
+              "path": "/tool_choice",
+              "value": "auto"
+            }
+          ]
+        },
+        {
+          "uuid": "DZbmUCMg47LmqiEoNcVhwz",
+          "span_id": "13371abc7a424d4c95c6d588200f8b3b",
+          "timestamp": "2026-01-13T08:46:01.995006+00:00",
+          "working_start": 1.080865193000136,
+          "event": "span_end",
+          "id": "13371abc7a424d4c95c6d588200f8b3b"
+        },
+        {
+          "uuid": "RCxmhVFckqigi292x2LfcZ",
+          "span_id": "73a3b0e1b83741c8af672767b0ef79ac",
+          "timestamp": "2026-01-13T08:46:01.995653+00:00",
+          "working_start": 1.0815122320000228,
+          "event": "span_begin",
+          "id": "73a3b0e1b83741c8af672767b0ef79ac",
+          "parent_id": "f2737a68be914649befdd0ecdf3de37f",
+          "type": "solver",
+          "name": "submit_tool"
+        },
+        {
+          "uuid": "9XcXvsHZ68eWBgnTc4LmRj",
+          "span_id": "73a3b0e1b83741c8af672767b0ef79ac",
+          "timestamp": "2026-01-13T08:46:02.000449+00:00",
+          "working_start": 1.0863086099998327,
+          "event": "state",
+          "changes": [
+            {
+              "op": "add",
+              "path": "/tools/6",
+              "value": {
+                "name": "submit",
+                "description": "Submit an answer for evaluation.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "answer": {
+                      "type": "string",
+                      "description": "Submitted answer"
+                    }
+                  },
+                  "required": [
+                    "answer"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "uuid": "hpzFccJT4gUdk25BEZkzzG",
+          "span_id": "73a3b0e1b83741c8af672767b0ef79ac",
+          "timestamp": "2026-01-13T08:46:02.001282+00:00",
+          "working_start": 1.0871421770007146,
+          "event": "span_end",
+          "id": "73a3b0e1b83741c8af672767b0ef79ac"
+        },
+        {
+          "uuid": "Agcse6usko93JWPyFXgLAq",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:02.001936+00:00",
+          "working_start": 1.0877947050003058,
+          "event": "span_begin",
+          "id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "parent_id": "f2737a68be914649befdd0ecdf3de37f",
+          "type": "solver",
+          "name": "basic_agent_loop"
+        },
+        {
+          "uuid": "kWFEhTKt8cwNsQqEzE77Nw",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:02.002976+00:00",
+          "working_start": 1.0888344579998375,
+          "event": "model",
+          "model": "openai/gpt-5-mini",
+          "input": [
+            {
+              "id": "CSC69GQyXCTTcazJjB87cx",
+              "content": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call submit and provide ONLY the final Snowfakery recipe YAML.\n",
+              "role": "system"
+            },
+            {
+              "id": "7eb4PTCCLRGLNiattCWP2Y",
+              "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+              "source": "input",
+              "role": "user"
+            }
+          ],
+          "tools": [
+            {
+              "name": "list_examples",
+              "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "prefix": {
+                    "description": "prefix",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "get_example",
+              "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "name"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "validate_recipe",
+              "description": "Validate a recipe using Snowfakery's validate-only mode.\n\n        Note: schema_validate is reserved for adding JSON-schema validation later.\n        ",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "schema_validate": {
+                    "type": "boolean",
+                    "description": "schema_validate",
+                    "default": false
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "analyze_recipe",
+              "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "run_recipe",
+              "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reps": {
+                    "description": "reps",
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target_number": {
+                    "description": "target_number",
+                    "anyOf": [
+                      {},
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "output_format",
+                    "default": "txt"
+                  },
+                  "capture_output": {
+                    "type": "boolean",
+                    "description": "capture_output",
+                    "default": true
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "validate_only": {
+                    "type": "boolean",
+                    "description": "validate_only",
+                    "default": false
+                  },
+                  "generate_continuation": {
+                    "type": "boolean",
+                    "description": "generate_continuation",
+                    "default": false
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "generate_mapping",
+              "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "load_declarations_paths": {
+                    "description": "load_declarations_paths",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "submit",
+              "description": "Submit an answer for evaluation.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "answer": {
+                    "type": "string",
+                    "description": "Submitted answer"
+                  }
+                },
+                "required": [
+                  "answer"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "tool_choice": "auto",
+          "config": {},
+          "output": {
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "message": {
+                  "id": "GRnJTDXVQVF2hUbM7HHkAo",
+                  "content": "",
+                  "source": "generate",
+                  "role": "assistant",
+                  "tool_calls": [
+                    {
+                      "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                      "function": "validate_recipe",
+                      "arguments": {
+                        "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+                        "strict_mode": true
+                      },
+                      "type": "function"
+                    }
+                  ],
+                  "model": "gpt-5-mini-2025-08-07"
+                },
+                "stop_reason": "tool_calls"
+              }
+            ],
+            "completion": "",
+            "usage": {
+              "input_tokens": 751,
+              "output_tokens": 80,
+              "total_tokens": 831,
+              "input_tokens_cache_read": 0,
+              "reasoning_tokens": 0
+            },
+            "time": 2.655900529000064
+          },
+          "call": {
+            "request": {
+              "messages": [
+                {
+                  "role": "developer",
+                  "content": "attachment://b8509936457d827b149d8c8f19ab97d9"
+                },
+                {
+                  "role": "user",
+                  "content": "attachment://e0ae6d56ce00c881b2a3b77e79bdfd4d"
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_examples",
+                    "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "prefix": {
+                          "description": "prefix",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_example",
+                    "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "name"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "validate_recipe",
+                    "description": "attachment://80bd9d74279400967a0b8123804b9b7c",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "schema_validate": {
+                          "type": "boolean",
+                          "description": "schema_validate",
+                          "default": false
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "analyze_recipe",
+                    "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "run_recipe",
+                    "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "reps": {
+                          "description": "reps",
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "target_number": {
+                          "description": "target_number",
+                          "anyOf": [
+                            {},
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "output_format": {
+                          "type": "string",
+                          "description": "output_format",
+                          "default": "txt"
+                        },
+                        "capture_output": {
+                          "type": "boolean",
+                          "description": "capture_output",
+                          "default": true
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "validate_only": {
+                          "type": "boolean",
+                          "description": "validate_only",
+                          "default": false
+                        },
+                        "generate_continuation": {
+                          "type": "boolean",
+                          "description": "generate_continuation",
+                          "default": false
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "generate_mapping",
+                    "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "load_declarations_paths": {
+                          "description": "load_declarations_paths",
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "submit",
+                    "description": "Submit an answer for evaluation.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "answer": {
+                          "type": "string",
+                          "description": "Submitted answer"
+                        }
+                      },
+                      "required": [
+                        "answer"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "tool_choice": "auto",
+              "extra_headers": {
+                "x-irid": "m7zsAAnf5pnav7WbsT5NPc"
+              },
+              "model": "gpt-5-mini"
+            },
+            "response": {
+              "id": "chatcmpl-CxUKJQpXEKdfFofRjwxCEWZVbycDt",
+              "choices": [
+                {
+                  "finish_reason": "tool_calls",
+                  "index": 0,
+                  "logprobs": null,
+                  "message": {
+                    "content": null,
+                    "refusal": null,
+                    "role": "assistant",
+                    "annotations": [],
+                    "audio": null,
+                    "function_call": null,
+                    "tool_calls": [
+                      {
+                        "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                        "function": {
+                          "arguments": "attachment://899edaa8fa3e3606cc328efb43d54efd",
+                          "name": "validate_recipe"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "content_filter_results": {}
+                }
+              ],
+              "created": 1768293963,
+              "model": "gpt-5-mini-2025-08-07",
+              "object": "chat.completion",
+              "service_tier": null,
+              "system_fingerprint": null,
+              "usage": {
+                "completion_tokens": 80,
+                "prompt_tokens": 751,
+                "total_tokens": 831,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "prompt_filter_results": [
+                {
+                  "prompt_index": 0,
+                  "content_filter_results": {
+                    "hate": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "jailbreak": {
+                      "detected": false,
+                      "filtered": false
+                    },
+                    "self_harm": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "sexual": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "violence": {
+                      "filtered": false,
+                      "severity": "safe"
+                    }
+                  }
+                }
+              ]
+            },
+            "time": 2.655900529000064
+          },
+          "completed": "2026-01-13T08:46:04.852201+00:00",
+          "working_time": 2.655900529000064
+        },
+        {
+          "uuid": "QVmDkG66U6m3DiqiziqiZt",
+          "span_id": "27d41b1fd9bb4c95ae37edcdf74093c8",
+          "timestamp": "2026-01-13T08:46:04.853131+00:00",
+          "working_start": 3.746239224999954,
+          "event": "span_begin",
+          "id": "27d41b1fd9bb4c95ae37edcdf74093c8",
+          "parent_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "type": "tool",
+          "name": "validate_recipe"
+        },
+        {
+          "uuid": "Nwgbw6Ahjeh3X2s7hAkZnr",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:04.852560+00:00",
+          "working_start": 3.7456685489996744,
+          "event": "tool",
+          "type": "function",
+          "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+          "function": "validate_recipe",
+          "arguments": {
+            "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+            "strict_mode": true
+          },
+          "result": [
+            {
+              "type": "text",
+              "text": "{\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"kind\": \"DataGenValidationError\",\n      \"message\": \"reference: Unknown object/nickname 'Accounts'. Did you mean 'Account'?\",\n      \"filename\": null,\n      \"line\": null\n    }\n  ]\n}"
+            }
+          ],
+          "events": [],
+          "completed": "2026-01-13T08:46:05.996675+00:00",
+          "working_time": 1.144115,
+          "message_id": "oHkq64Z7zzrqDbUzBj2uzr"
+        },
+        {
+          "uuid": "Ux5yhSFRfH3HebFa82rfpU",
+          "span_id": "27d41b1fd9bb4c95ae37edcdf74093c8",
+          "timestamp": "2026-01-13T08:46:05.995233+00:00",
+          "working_start": 4.888345249999475,
+          "event": "span_end",
+          "id": "27d41b1fd9bb4c95ae37edcdf74093c8"
+        },
+        {
+          "uuid": "MqMUWR5hSK3WmWrf6uEuHT",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:05.997653+00:00",
+          "working_start": 4.890761515999657,
+          "event": "model",
+          "model": "openai/gpt-5-mini",
+          "input": [
+            {
+              "id": "CSC69GQyXCTTcazJjB87cx",
+              "content": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call submit and provide ONLY the final Snowfakery recipe YAML.\n",
+              "role": "system"
+            },
+            {
+              "id": "7eb4PTCCLRGLNiattCWP2Y",
+              "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+              "source": "input",
+              "role": "user"
+            },
+            {
+              "id": "GRnJTDXVQVF2hUbM7HHkAo",
+              "content": "",
+              "source": "generate",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                  "function": "validate_recipe",
+                  "arguments": {
+                    "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+                    "strict_mode": true
+                  },
+                  "type": "function"
+                }
+              ],
+              "model": "gpt-5-mini-2025-08-07"
+            },
+            {
+              "id": "oHkq64Z7zzrqDbUzBj2uzr",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"kind\": \"DataGenValidationError\",\n      \"message\": \"reference: Unknown object/nickname 'Accounts'. Did you mean 'Account'?\",\n      \"filename\": null,\n      \"line\": null\n    }\n  ]\n}"
+                }
+              ],
+              "role": "tool",
+              "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+              "function": "validate_recipe"
+            }
+          ],
+          "tools": [
+            {
+              "name": "list_examples",
+              "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "prefix": {
+                    "description": "prefix",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "get_example",
+              "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "name"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "validate_recipe",
+              "description": "Validate a recipe using Snowfakery's validate-only mode.\n\n        Note: schema_validate is reserved for adding JSON-schema validation later.\n        ",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "schema_validate": {
+                    "type": "boolean",
+                    "description": "schema_validate",
+                    "default": false
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "analyze_recipe",
+              "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "run_recipe",
+              "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reps": {
+                    "description": "reps",
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target_number": {
+                    "description": "target_number",
+                    "anyOf": [
+                      {},
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "output_format",
+                    "default": "txt"
+                  },
+                  "capture_output": {
+                    "type": "boolean",
+                    "description": "capture_output",
+                    "default": true
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "validate_only": {
+                    "type": "boolean",
+                    "description": "validate_only",
+                    "default": false
+                  },
+                  "generate_continuation": {
+                    "type": "boolean",
+                    "description": "generate_continuation",
+                    "default": false
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "generate_mapping",
+              "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "load_declarations_paths": {
+                    "description": "load_declarations_paths",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "submit",
+              "description": "Submit an answer for evaluation.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "answer": {
+                    "type": "string",
+                    "description": "Submitted answer"
+                  }
+                },
+                "required": [
+                  "answer"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "tool_choice": "auto",
+          "config": {},
+          "output": {
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "message": {
+                  "id": "2tntqVrsz7sU9DFMxTMGnA",
+                  "content": "",
+                  "source": "generate",
+                  "role": "assistant",
+                  "tool_calls": [
+                    {
+                      "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                      "function": "validate_recipe",
+                      "arguments": {
+                        "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+                        "strict_mode": true
+                      },
+                      "type": "function"
+                    }
+                  ],
+                  "model": "gpt-5-mini-2025-08-07"
+                },
+                "stop_reason": "tool_calls"
+              }
+            ],
+            "completion": "",
+            "usage": {
+              "input_tokens": 897,
+              "output_tokens": 272,
+              "total_tokens": 1169,
+              "input_tokens_cache_read": 0,
+              "reasoning_tokens": 192
+            },
+            "time": 4.002897158000451
+          },
+          "call": {
+            "request": {
+              "messages": [
+                {
+                  "role": "developer",
+                  "content": "attachment://b8509936457d827b149d8c8f19ab97d9"
+                },
+                {
+                  "role": "user",
+                  "content": "attachment://e0ae6d56ce00c881b2a3b77e79bdfd4d"
+                },
+                {
+                  "role": "assistant",
+                  "content": "",
+                  "tool_calls": [
+                    {
+                      "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                      "function": {
+                        "name": "validate_recipe",
+                        "arguments": "attachment://a14c933bcecf72a7e38b951439678f65"
+                      },
+                      "type": "function"
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "content": "attachment://f56d3e8e843714a2a36424988ce63f0c",
+                  "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR"
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_examples",
+                    "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "prefix": {
+                          "description": "prefix",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_example",
+                    "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "name"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "validate_recipe",
+                    "description": "attachment://80bd9d74279400967a0b8123804b9b7c",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "schema_validate": {
+                          "type": "boolean",
+                          "description": "schema_validate",
+                          "default": false
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "analyze_recipe",
+                    "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "run_recipe",
+                    "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "reps": {
+                          "description": "reps",
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "target_number": {
+                          "description": "target_number",
+                          "anyOf": [
+                            {},
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "output_format": {
+                          "type": "string",
+                          "description": "output_format",
+                          "default": "txt"
+                        },
+                        "capture_output": {
+                          "type": "boolean",
+                          "description": "capture_output",
+                          "default": true
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "validate_only": {
+                          "type": "boolean",
+                          "description": "validate_only",
+                          "default": false
+                        },
+                        "generate_continuation": {
+                          "type": "boolean",
+                          "description": "generate_continuation",
+                          "default": false
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "generate_mapping",
+                    "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "load_declarations_paths": {
+                          "description": "load_declarations_paths",
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "submit",
+                    "description": "Submit an answer for evaluation.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "answer": {
+                          "type": "string",
+                          "description": "Submitted answer"
+                        }
+                      },
+                      "required": [
+                        "answer"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "tool_choice": "auto",
+              "extra_headers": {
+                "x-irid": "WvHLHuGGgea7S7Mw9nPJQN"
+              },
+              "model": "gpt-5-mini"
+            },
+            "response": {
+              "id": "chatcmpl-CxUKM3d6Dv9WXLqk1Gxpx6RoAndKO",
+              "choices": [
+                {
+                  "finish_reason": "tool_calls",
+                  "index": 0,
+                  "logprobs": null,
+                  "message": {
+                    "content": null,
+                    "refusal": null,
+                    "role": "assistant",
+                    "annotations": [],
+                    "audio": null,
+                    "function_call": null,
+                    "tool_calls": [
+                      {
+                        "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                        "function": {
+                          "arguments": "attachment://e09071dabbf253d50f556693a155fce0",
+                          "name": "validate_recipe"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "content_filter_results": {}
+                }
+              ],
+              "created": 1768293966,
+              "model": "gpt-5-mini-2025-08-07",
+              "object": "chat.completion",
+              "service_tier": null,
+              "system_fingerprint": null,
+              "usage": {
+                "completion_tokens": 272,
+                "prompt_tokens": 897,
+                "total_tokens": 1169,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 192,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "prompt_filter_results": [
+                {
+                  "prompt_index": 0,
+                  "content_filter_results": {
+                    "hate": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "jailbreak": {
+                      "detected": false,
+                      "filtered": false
+                    },
+                    "self_harm": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "sexual": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "violence": {
+                      "filtered": false,
+                      "severity": "safe"
+                    }
+                  }
+                }
+              ]
+            },
+            "time": 4.002897158000451
+          },
+          "completed": "2026-01-13T08:46:10.007866+00:00",
+          "working_time": 4.002897158000451
+        },
+        {
+          "uuid": "GTHaVcNSYeAStMTSroCXu2",
+          "span_id": "70e398e6feac419ebc1eef1c072d3614",
+          "timestamp": "2026-01-13T08:46:10.008611+00:00",
+          "working_start": 8.89479371500056,
+          "event": "span_begin",
+          "id": "70e398e6feac419ebc1eef1c072d3614",
+          "parent_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "type": "tool",
+          "name": "validate_recipe"
+        },
+        {
+          "uuid": "mtQbqav5oMN9LcdyMPaovx",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:10.008071+00:00",
+          "working_start": 8.894253246000517,
+          "event": "tool",
+          "type": "function",
+          "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+          "function": "validate_recipe",
+          "arguments": {
+            "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+            "strict_mode": true
+          },
+          "result": [
+            {
+              "type": "text",
+              "text": "{\n  \"valid\": true,\n  \"errors\": []\n}"
+            }
+          ],
+          "events": [],
+          "completed": "2026-01-13T08:46:11.251035+00:00",
+          "working_time": 1.242964,
+          "message_id": "XudpSP3MSY9kCbYHtAy62c"
+        },
+        {
+          "uuid": "5aher2ciJYam6XvAeFLJaT",
+          "span_id": "70e398e6feac419ebc1eef1c072d3614",
+          "timestamp": "2026-01-13T08:46:11.249563+00:00",
+          "working_start": 10.135750979000477,
+          "event": "span_end",
+          "id": "70e398e6feac419ebc1eef1c072d3614"
+        },
+        {
+          "uuid": "KX5hSqCcUZAUSr4U8Q9ZGq",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:11.252356+00:00",
+          "working_start": 10.138539267000851,
+          "event": "model",
+          "model": "openai/gpt-5-mini",
+          "input": [
+            {
+              "id": "CSC69GQyXCTTcazJjB87cx",
+              "content": "You are solving Snowfakery recipe tasks.\n\nUse the available tools sparingly to validate, debug, and iterate.\n- Keep messages short and avoid pasting large tool outputs.\n- Prefer targeted tool calls over broad searches.\n- Try to finish in ~3 tool calls.\n- When ready, call submit and provide ONLY the final Snowfakery recipe YAML.\n",
+              "role": "system"
+            },
+            {
+              "id": "7eb4PTCCLRGLNiattCWP2Y",
+              "content": "TASK: Debug broken reference\n\nYou are given a Snowfakery recipe that fails. Use available tools to debug it, then submit a corrected recipe YAML.\n\nBroken recipe:\n- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n\n\nRequirements:\n- Use available tools/resources to debug/iterate.\n- When ready, output ONLY the final Snowfakery recipe YAML.\n",
+              "source": "input",
+              "role": "user"
+            },
+            {
+              "id": "GRnJTDXVQVF2hUbM7HHkAo",
+              "content": "",
+              "source": "generate",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                  "function": "validate_recipe",
+                  "arguments": {
+                    "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+                    "strict_mode": true
+                  },
+                  "type": "function"
+                }
+              ],
+              "model": "gpt-5-mini-2025-08-07"
+            },
+            {
+              "id": "oHkq64Z7zzrqDbUzBj2uzr",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"kind\": \"DataGenValidationError\",\n      \"message\": \"reference: Unknown object/nickname 'Accounts'. Did you mean 'Account'?\",\n      \"filename\": null,\n      \"line\": null\n    }\n  ]\n}"
+                }
+              ],
+              "role": "tool",
+              "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+              "function": "validate_recipe"
+            },
+            {
+              "id": "2tntqVrsz7sU9DFMxTMGnA",
+              "content": "",
+              "source": "generate",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                  "function": "validate_recipe",
+                  "arguments": {
+                    "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+                    "strict_mode": true
+                  },
+                  "type": "function"
+                }
+              ],
+              "model": "gpt-5-mini-2025-08-07"
+            },
+            {
+              "id": "XudpSP3MSY9kCbYHtAy62c",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{\n  \"valid\": true,\n  \"errors\": []\n}"
+                }
+              ],
+              "role": "tool",
+              "tool_call_id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+              "function": "validate_recipe"
+            }
+          ],
+          "tools": [
+            {
+              "name": "list_examples",
+              "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "prefix": {
+                    "description": "prefix",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "get_example",
+              "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "name"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "validate_recipe",
+              "description": "Validate a recipe using Snowfakery's validate-only mode.\n\n        Note: schema_validate is reserved for adding JSON-schema validation later.\n        ",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "schema_validate": {
+                    "type": "boolean",
+                    "description": "schema_validate",
+                    "default": false
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "analyze_recipe",
+              "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "run_recipe",
+              "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "options": {
+                    "description": "options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plugin_options": {
+                    "description": "plugin_options",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reps": {
+                    "description": "reps",
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target_number": {
+                    "description": "target_number",
+                    "anyOf": [
+                      {},
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "output_format",
+                    "default": "txt"
+                  },
+                  "capture_output": {
+                    "type": "boolean",
+                    "description": "capture_output",
+                    "default": true
+                  },
+                  "strict_mode": {
+                    "type": "boolean",
+                    "description": "strict_mode",
+                    "default": true
+                  },
+                  "validate_only": {
+                    "type": "boolean",
+                    "description": "validate_only",
+                    "default": false
+                  },
+                  "generate_continuation": {
+                    "type": "boolean",
+                    "description": "generate_continuation",
+                    "default": false
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "generate_mapping",
+              "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "recipe_path": {
+                    "description": "recipe_path",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recipe_text": {
+                    "description": "recipe_text",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "load_declarations_paths": {
+                    "description": "load_declarations_paths",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            {
+              "name": "submit",
+              "description": "Submit an answer for evaluation.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "answer": {
+                    "type": "string",
+                    "description": "Submitted answer"
+                  }
+                },
+                "required": [
+                  "answer"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "tool_choice": "auto",
+          "config": {},
+          "output": {
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "message": {
+                  "id": "EsrfZeEzRf5EUGtEyGJCJ2",
+                  "content": "",
+                  "source": "generate",
+                  "role": "assistant",
+                  "tool_calls": [
+                    {
+                      "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                      "function": "submit",
+                      "arguments": {
+                        "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+                      },
+                      "type": "function"
+                    }
+                  ],
+                  "model": "gpt-5-mini-2025-08-07"
+                },
+                "stop_reason": "tool_calls"
+              }
+            ],
+            "completion": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+            "usage": {
+              "input_tokens": 994,
+              "output_tokens": 67,
+              "total_tokens": 1061,
+              "input_tokens_cache_read": 0,
+              "reasoning_tokens": 0
+            },
+            "time": 1.1947738449998724
+          },
+          "call": {
+            "request": {
+              "messages": [
+                {
+                  "role": "developer",
+                  "content": "attachment://b8509936457d827b149d8c8f19ab97d9"
+                },
+                {
+                  "role": "user",
+                  "content": "attachment://e0ae6d56ce00c881b2a3b77e79bdfd4d"
+                },
+                {
+                  "role": "assistant",
+                  "content": "",
+                  "tool_calls": [
+                    {
+                      "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                      "function": {
+                        "name": "validate_recipe",
+                        "arguments": "attachment://a14c933bcecf72a7e38b951439678f65"
+                      },
+                      "type": "function"
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "content": "attachment://f56d3e8e843714a2a36424988ce63f0c",
+                  "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR"
+                },
+                {
+                  "role": "assistant",
+                  "content": "",
+                  "tool_calls": [
+                    {
+                      "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                      "function": {
+                        "name": "validate_recipe",
+                        "arguments": "attachment://9ab6d7cfad654569dce08bafbd992930"
+                      },
+                      "type": "function"
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "content": "{\n  \"valid\": true,\n  \"errors\": []\n}",
+                  "tool_call_id": "call_x2eonVMo9wp2WmrcPYyvRhfk"
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "list_examples",
+                    "description": "List available Snowfakery example recipe files under Snowfakery/examples.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "prefix": {
+                          "description": "prefix",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "get_example",
+                    "description": "Fetch a Snowfakery example recipe by relative path and return its text.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "name"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "validate_recipe",
+                    "description": "attachment://80bd9d74279400967a0b8123804b9b7c",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "schema_validate": {
+                          "type": "boolean",
+                          "description": "schema_validate",
+                          "default": false
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "analyze_recipe",
+                    "description": "Parse a recipe and return a structural summary (tables, fields, options, plugins).",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "run_recipe",
+                    "description": "Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "options": {
+                          "description": "options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plugin_options": {
+                          "description": "plugin_options",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "reps": {
+                          "description": "reps",
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "target_number": {
+                          "description": "target_number",
+                          "anyOf": [
+                            {},
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "output_format": {
+                          "type": "string",
+                          "description": "output_format",
+                          "default": "txt"
+                        },
+                        "capture_output": {
+                          "type": "boolean",
+                          "description": "capture_output",
+                          "default": true
+                        },
+                        "strict_mode": {
+                          "type": "boolean",
+                          "description": "strict_mode",
+                          "default": true
+                        },
+                        "validate_only": {
+                          "type": "boolean",
+                          "description": "validate_only",
+                          "default": false
+                        },
+                        "generate_continuation": {
+                          "type": "boolean",
+                          "description": "generate_continuation",
+                          "default": false
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "generate_mapping",
+                    "description": "Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "recipe_path": {
+                          "description": "recipe_path",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recipe_text": {
+                          "description": "recipe_text",
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "load_declarations_paths": {
+                          "description": "load_declarations_paths",
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "submit",
+                    "description": "Submit an answer for evaluation.",
+                    "parameters": {
+                      "type": "object",
+                      "properties": {
+                        "answer": {
+                          "type": "string",
+                          "description": "Submitted answer"
+                        }
+                      },
+                      "required": [
+                        "answer"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              ],
+              "tool_choice": "auto",
+              "extra_headers": {
+                "x-irid": "gJRMsfRm47rTDrqzyWXVTi"
+              },
+              "model": "gpt-5-mini"
+            },
+            "response": {
+              "id": "chatcmpl-CxUKRnhGZ1JlKlqCe5RdC088RaWnv",
+              "choices": [
+                {
+                  "finish_reason": "tool_calls",
+                  "index": 0,
+                  "logprobs": null,
+                  "message": {
+                    "content": null,
+                    "refusal": null,
+                    "role": "assistant",
+                    "annotations": [],
+                    "audio": null,
+                    "function_call": null,
+                    "tool_calls": [
+                      {
+                        "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                        "function": {
+                          "arguments": "attachment://50289acdf020a026ee92175b45aa1318",
+                          "name": "submit"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "content_filter_results": {}
+                }
+              ],
+              "created": 1768293971,
+              "model": "gpt-5-mini-2025-08-07",
+              "object": "chat.completion",
+              "service_tier": null,
+              "system_fingerprint": null,
+              "usage": {
+                "completion_tokens": 67,
+                "prompt_tokens": 994,
+                "total_tokens": 1061,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "prompt_filter_results": [
+                {
+                  "prompt_index": 0,
+                  "content_filter_results": {
+                    "hate": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "jailbreak": {
+                      "detected": false,
+                      "filtered": false
+                    },
+                    "self_harm": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "sexual": {
+                      "filtered": false,
+                      "severity": "safe"
+                    },
+                    "violence": {
+                      "filtered": false,
+                      "severity": "safe"
+                    }
+                  }
+                }
+              ]
+            },
+            "time": 1.1947738449998724
+          },
+          "completed": "2026-01-13T08:46:12.457945+00:00",
+          "working_time": 1.1947738449998724
+        },
+        {
+          "uuid": "6joBg95bpnUaDdvgRfLTF6",
+          "span_id": "f4e3bfe2ab7348afa149b151f3440a3f",
+          "timestamp": "2026-01-13T08:46:12.458784+00:00",
+          "working_start": 11.33473360500011,
+          "event": "span_begin",
+          "id": "f4e3bfe2ab7348afa149b151f3440a3f",
+          "parent_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "type": "tool",
+          "name": "submit"
+        },
+        {
+          "uuid": "HybApvH2NedF4Pu6tqqDAT",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:12.458141+00:00",
+          "working_start": 11.334090613000626,
+          "event": "tool",
+          "type": "function",
+          "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+          "function": "submit",
+          "arguments": {
+            "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+          },
+          "result": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+          "events": [],
+          "completed": "2026-01-13T08:46:12.460815+00:00",
+          "working_time": 0.002674,
+          "message_id": "ACYa7GmqXSzmJDndCBFWcg"
+        },
+        {
+          "uuid": "5KitWHHcCY4F4FBJDzXTaW",
+          "span_id": "f4e3bfe2ab7348afa149b151f3440a3f",
+          "timestamp": "2026-01-13T08:46:12.459963+00:00",
+          "working_start": 11.33591217600042,
+          "event": "span_end",
+          "id": "f4e3bfe2ab7348afa149b151f3440a3f"
+        },
+        {
+          "uuid": "LyUpg3EMRKpzQWsXBKWsF2",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:12.461943+00:00",
+          "working_start": 11.33789211400017,
+          "event": "state",
+          "changes": [
+            {
+              "op": "add",
+              "path": "/output/usage",
+              "value": {
+                "input_tokens": 994,
+                "output_tokens": 67,
+                "total_tokens": 1061,
+                "input_tokens_cache_read": 0,
+                "reasoning_tokens": 0
+              }
+            },
+            {
+              "op": "add",
+              "path": "/output/time",
+              "value": 1.1947738449998724
+            },
+            {
+              "op": "replace",
+              "path": "/output/completion",
+              "value": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+              "replaced": ""
+            },
+            {
+              "op": "replace",
+              "path": "/output/model",
+              "value": "gpt-5-mini-2025-08-07",
+              "replaced": "openai/gpt-5-mini"
+            },
+            {
+              "op": "add",
+              "path": "/output/choices/0",
+              "value": {
+                "message": {
+                  "id": "EsrfZeEzRf5EUGtEyGJCJ2",
+                  "content": "",
+                  "source": "generate",
+                  "role": "assistant",
+                  "tool_calls": [
+                    {
+                      "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                      "function": "submit",
+                      "arguments": {
+                        "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+                      },
+                      "type": "function"
+                    }
+                  ],
+                  "model": "gpt-5-mini-2025-08-07"
+                },
+                "stop_reason": "tool_calls"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/2",
+              "value": {
+                "id": "GRnJTDXVQVF2hUbM7HHkAo",
+                "content": "",
+                "source": "generate",
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                    "function": "validate_recipe",
+                    "arguments": {
+                      "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Accounts\n",
+                      "strict_mode": true
+                    },
+                    "type": "function"
+                  }
+                ],
+                "model": "gpt-5-mini-2025-08-07"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/3",
+              "value": {
+                "id": "oHkq64Z7zzrqDbUzBj2uzr",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "{\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"kind\": \"DataGenValidationError\",\n      \"message\": \"reference: Unknown object/nickname 'Accounts'. Did you mean 'Account'?\",\n      \"filename\": null,\n      \"line\": null\n    }\n  ]\n}"
+                  }
+                ],
+                "role": "tool",
+                "tool_call_id": "call_luAYRTsddpSLrlaIPYmEjTdR",
+                "function": "validate_recipe"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/4",
+              "value": {
+                "id": "2tntqVrsz7sU9DFMxTMGnA",
+                "content": "",
+                "source": "generate",
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                    "function": "validate_recipe",
+                    "arguments": {
+                      "recipe_text": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+                      "strict_mode": true
+                    },
+                    "type": "function"
+                  }
+                ],
+                "model": "gpt-5-mini-2025-08-07"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/5",
+              "value": {
+                "id": "XudpSP3MSY9kCbYHtAy62c",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "{\n  \"valid\": true,\n  \"errors\": []\n}"
+                  }
+                ],
+                "role": "tool",
+                "tool_call_id": "call_x2eonVMo9wp2WmrcPYyvRhfk",
+                "function": "validate_recipe"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/6",
+              "value": {
+                "id": "EsrfZeEzRf5EUGtEyGJCJ2",
+                "content": "",
+                "source": "generate",
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                    "function": "submit",
+                    "arguments": {
+                      "answer": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n"
+                    },
+                    "type": "function"
+                  }
+                ],
+                "model": "gpt-5-mini-2025-08-07"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/messages/7",
+              "value": {
+                "id": "ACYa7GmqXSzmJDndCBFWcg",
+                "content": "- snowfakery_version: 3\n- object: Account\n  fields:\n    Name: ACME\n- object: Contact\n  fields:\n    FirstName: Buster\n    AccountId:\n      reference: Account\n",
+                "role": "tool",
+                "tool_call_id": "call_G6OfOLettIbKloaMBsdGdZK6",
+                "function": "submit"
+              }
+            }
+          ]
+        },
+        {
+          "uuid": "nrsxjkXk7UeGyN7hs48SNU",
+          "span_id": "e7143cfab1d649029ebd3e4edfaab5ed",
+          "timestamp": "2026-01-13T08:46:12.462757+00:00",
+          "working_start": 11.338706495000224,
+          "event": "span_end",
+          "id": "e7143cfab1d649029ebd3e4edfaab5ed"
+        },
+        {
+          "uuid": "kiijkarb7HRapxJjuNfkLj",
+          "span_id": "f2737a68be914649befdd0ecdf3de37f",
+          "timestamp": "2026-01-13T08:46:12.463331+00:00",
+          "working_start": 11.339279916000123,
+          "event": "span_end",
+          "id": "f2737a68be914649befdd0ecdf3de37f"
+        },
+        {
+          "uuid": "UqoS6Dt9nZp5L5kuwxbQue",
+          "span_id": "dee5708c33ea41b59ff4646ec9c8a80a",
+          "timestamp": "2026-01-13T08:46:12.464133+00:00",
+          "working_start": 11.34008180300043,
+          "event": "span_begin",
+          "id": "dee5708c33ea41b59ff4646ec9c8a80a",
+          "type": "scorers",
+          "name": "scorers"
+        },
+        {
+          "uuid": "HG56dFtauAM9SJzsPiaptx",
+          "span_id": "1103f7b995f64220ad23b612f0b77f90",
+          "timestamp": "2026-01-13T08:46:12.464731+00:00",
+          "working_start": 11.340680131000227,
+          "event": "span_begin",
+          "id": "1103f7b995f64220ad23b612f0b77f90",
+          "parent_id": "dee5708c33ea41b59ff4646ec9c8a80a",
+          "type": "scorer",
+          "name": "snowfakery_mcp_recipe"
+        },
+        {
+          "uuid": "dX7Z7E3eyR33nxJWYDYHyN",
+          "span_id": "1103f7b995f64220ad23b612f0b77f90",
+          "timestamp": "2026-01-13T08:46:12.465306+00:00",
+          "working_start": 11.341255656000612,
+          "event": "score",
+          "score": {
+            "value": false,
+            "explanation": "Missing required tool calls: ['run_recipe']",
+            "metadata": {
+              "missing_tool_calls": [
+                "run_recipe"
+              ],
+              "tool_calls": [
+                "validate_recipe",
+                "validate_recipe",
+                "submit"
+              ]
+            },
+            "history": []
+          },
+          "target": "",
+          "intermediate": false
+        },
+        {
+          "uuid": "i9HRudJDy8nsDBPHn7gnn5",
+          "span_id": "1103f7b995f64220ad23b612f0b77f90",
+          "timestamp": "2026-01-13T08:46:12.466157+00:00",
+          "working_start": 11.342105914000058,
+          "event": "span_end",
+          "id": "1103f7b995f64220ad23b612f0b77f90"
+        },
+        {
+          "uuid": "iPzifMCYoJW8DUxKTxtmBr",
+          "span_id": "dee5708c33ea41b59ff4646ec9c8a80a",
+          "timestamp": "2026-01-13T08:46:12.466733+00:00",
+          "working_start": 11.34268246100055,
+          "event": "span_end",
+          "id": "dee5708c33ea41b59ff4646ec9c8a80a"
+        }
+      ],
+      "model_usage": {
+        "openai/gpt-5-mini": {
+          "input_tokens": 2642,
+          "output_tokens": 419,
+          "total_tokens": 3061,
+          "input_tokens_cache_read": 0,
+          "reasoning_tokens": 192
+        }
+      },
+      "started_at": "2026-01-13T08:46:00.914145+00:00",
+      "completed_at": "2026-01-13T08:46:12.467743+00:00",
+      "total_time": 11.554,
+      "working_time": 11.344,
+      "uuid": "nAvAiPThCBnCjY32zTP69Y",
+      "error_retries": [],
+      "attachments": {}
+    }
+  ],
+  "reductions": [
+    {
+      "scorer": "snowfakery_mcp_recipe",
+      "samples": [
+        {
+          "value": 0.0,
+          "explanation": "Missing required tool calls: ['run_recipe']",
+          "metadata": {
+            "missing_tool_calls": [
+              "run_recipe"
+            ],
+            "tool_calls": [
+              "validate_recipe",
+              "validate_recipe",
+              "submit"
+            ]
+          },
+          "history": [],
+          "sample_id": "debug_broken_reference"
+        }
+      ]
+    }
+  ]
+}
