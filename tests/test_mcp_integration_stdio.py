@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import textwrap
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest
 from mcp.client.session import ClientSession
@@ -11,12 +12,13 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 
 @pytest.fixture
 async def mcp_session() -> AsyncIterator[ClientSession]:
+    repo_root = Path(__file__).resolve().parents[1]
     params = StdioServerParameters(
         command="uv",
         args=["run", "snowfakery-mcp"],
-        cwd="/workspaces/snowfakery-mcp",
+        cwd=str(repo_root),
         env={
-            "SNOWFAKERY_MCP_WORKSPACE_ROOT": "/workspaces/snowfakery-mcp",
+            "SNOWFAKERY_MCP_WORKSPACE_ROOT": str(repo_root),
             "SNOWFAKERY_MCP_MAX_REPS": "5",
             "SNOWFAKERY_MCP_MAX_TARGET_COUNT": "50",
             "SNOWFAKERY_MCP_MAX_CAPTURE_CHARS": "5000",
