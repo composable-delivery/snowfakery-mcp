@@ -1,55 +1,110 @@
 # Contributing
 
-Thanks for your interest in contributing to snowfakery-mcp!
+We welcome contributions at any level! Whether you're asking questions, sharing examples, reporting bugs, or building features, you're making this project better.
 
-## Quick start (Codespaces / local)
+## Getting Started
 
-- Install `uv` (<https://docs.astral.sh/uv/>)
-- `uv sync --all-groups`
-- Run tests: `uv run pytest`
-- Run typecheck: `uv run mypy snowfakery_mcp`
-- Run the MCP server: `uv run snowfakery-mcp`
+### Setup
 
-## Development notes
+We use `uv` for a fast, predictable Python environment:
 
-- This repo vendors Snowfakery as a git submodule in `Snowfakery/` for development-time access to docs, examples, and schema.
-- The published package should still function without the submodule present.
+```bash
+# Clone and install
+git clone https://github.com/composable-delivery/snowfakery-mcp.git
+cd snowfakery-mcp
+uv sync --all-groups
 
-## Community process
+# Quick verification
+uv run pytest
+uv run mypy snowfakery_mcp
+```
 
-We welcome contributions at any level — from questions and examples to full features. Here's how we prefer to work so everyone can participate effectively.
+### Development commands
 
-1. Discussions: start informal design, usage, or proposal conversations in GitHub Discussions. Use the following categories when available: `Q&A`, `How-to`, `Ideas`, or `Show and tell`.
-2. Issues: open an Issue for reproducible bugs or scoped feature requests. If a Discussion leads to actionable work, a maintainer may convert it into an Issue.
-3. Projects: accepted Issues are added to the project board and scheduled by maintainers. Work is done in feature branches and linked to the Issue.
+```bash
+# Run the MCP server locally
+uv run snowfakery-mcp
 
-### Filing high-quality issues
+# Run tests
+uv run pytest
 
-Include the following to help triage quickly:
+# Type check
+uv run mypy snowfakery_mcp
 
-- **Expected vs actual behavior** — short description
-- **Minimal reproduction** — recipe snippet or steps to reproduce
-- **Environment** — OS, Python version, and whether you ran from a release or from source
-- **Logs / traceback** — redact secrets
+# Lint & format
+uv run ruff check snowfakery_mcp tests scripts evals
+uv run ruff format snowfakery_mcp tests scripts evals
+```
 
-### Pull request guidance
+### Important: Git submodule
 
-- Keep PRs focused and small. Prefer one change per PR.
-- Add or update tests when changing behavior.
-- Reference the related Issue in the PR description (eg, "Fixes #123").
-- Expect maintainers to request changes; be responsive to feedback.
+This repo vendors Snowfakery as a git submodule (`Snowfakery/`). When developing:
 
-If you want help drafting a contribution, open a Discussion in the `How-to` or `Ideas` category and tag maintainers.
+```bash
+# Initialize submodule (if not present)
+git submodule update --init
 
-## Filing issues
+# Update to latest upstream
+git submodule update --remote
+```
 
-Please use the issue forms. Include:
+The published package works without the submodule (falls back to bundled docs/examples), but development benefits from having the full upstream repo for docs and examples.
 
-- What you expected vs what happened
-- Repro steps (recipe text or a minimal snippet)
-- OS and Python version
-- Whether you’re running from a release (`pipx install ...`) or from source (`uv run ...`)
+## How to Contribute
 
-## License
+### Questions & Ideas
 
-By contributing, you agree that your contributions will be licensed under the project’s dual license (Apache-2.0 OR MIT).
+Start a [GitHub Discussion](https://github.com/composable-delivery/snowfakery-mcp/discussions) if you want to:
+- Ask how to use the server or write recipes
+- Propose new features or UX improvements
+- Discuss design or implementation approaches
+- Share examples or integrations
+
+This keeps conversations discoverable and helps maintainers understand what's most valuable to the community.
+
+### Bugs & Feature Requests
+
+[Open an Issue](https://github.com/composable-delivery/snowfakery-mcp/issues) for:
+- Reproducible bugs with minimal steps
+- Scoped feature requests with clear use cases
+
+**Include in your issue:**
+- What you expected vs what actually happened
+- Minimal reproduction (recipe snippet or steps)
+- Your environment: OS, Python version, and installation method (release vs source)
+- Any relevant logs or error messages (redact secrets)
+
+### Code Contributions
+
+Pull requests are always welcome! Keep these guidelines in mind:
+
+**Before starting:**
+- Check if an Issue exists for your work. If not, open a Discussion or Issue first.
+- For larger changes, discuss your approach before investing a lot of time.
+
+**When submitting a PR:**
+- Keep it focused and small. One feature or fix per PR.
+- Add tests for any behavior changes.
+- Reference the related Issue in the PR description (e.g., "Fixes #123").
+- Expect feedback—maintainers will review and may request changes. That's normal and helpful!
+
+**Code standards:**
+- Type hints throughout
+- Tests for new behavior
+- Follow existing code style (use `ruff format` to auto-format)
+
+## Licensing
+
+By contributing, you agree that your contributions are licensed under the project's dual license: Apache-2.0 OR MIT.
+
+## Code of Conduct
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). We're committed to a welcoming, harassment-free community.
+
+## Security
+
+Found a security vulnerability? Please don't open a public Issue. Instead, use [GitHub Security Advisories](https://github.com/composable-delivery/snowfakery-mcp/security/advisories) to report it privately. See [SECURITY.md](SECURITY.md) for details.
+
+## Questions?
+
+Open a Discussion or reach out to maintainers. We're here to help!

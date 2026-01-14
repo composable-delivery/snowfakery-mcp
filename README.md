@@ -1,189 +1,122 @@
-This repository provides the MCP (Model Context Protocol) server for Snowfakery — a tool to author, validate, analyze, and run Snowfakery recipes programmatically.
+# Snowfakery MCP Server
 
-Quick links
+**Power up your AI workflows with Snowfakery data generation** — Use Claude, ChatGPT, and other AI assistants to author, debug, and run data recipes through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
-- **Docs:** https://snowfakery.readthedocs.io/
-- **Upstream repo:** https://github.com/SFDO-Tooling/Snowfakery
+## What is this?
 
-Getting started
+[Snowfakery](https://github.com/SFDO-Tooling/Snowfakery) is a YAML-based tool for programmatically generating test data. This MCP server connects Snowfakery to AI assistants, letting you:
 
-- Install from PyPI (recommended, isolated): `pipx install snowfakery-mcp`
-- Run installed binary: `snowfakery-mcp`
-- Run from source (development):
-	- `uv sync --all-groups`
-	- `uv run snowfakery-mcp`
+- **Draft recipes** with AI assistance backed by real Snowfakery docs and examples
+- **Validate recipes** before running them with detailed error feedback
+- **Execute recipes** and iterate on results interactively
+- **Debug issues** with static analysis and recipe inspection
+- **Generate Salesforce mappings** for CumulusCI workflows
 
-Development
+Perfect for teams that need realistic test data—from Salesforce admins to developers building data pipelines.
 
-- Install dev deps: `uv sync --all-groups`
-- Tests: `uv run pytest`
-- Typecheck: `uv run mypy snowfakery_mcp`
-- Lint: `uv run ruff check snowfakery_mcp tests scripts evals`
-- Format: `uv run ruff format snowfakery_mcp tests scripts evals`
+## Quick Start
 
-Notes
+### Install & Run
 
-- The repository vendors the upstream Snowfakery repo as a git submodule under `Snowfakery/` to access the canonical docs and examples while developing. When the submodule is not present (for example, in a PyPI install), the package falls back to a bundled snapshot of docs/examples.
-- For Snowfakery-related commands locally prefer `uv run ...` to ensure the pinned environment is used.
+```bash
+# Recommended: isolated install
+pipx install snowfakery-mcp
 
-What's included (MVP)
+# Then run the server
+snowfakery-mcp
+```
 
-- Resources: schema, docs, example recipes and run artifacts exposed as `snowfakery://...` MCP resources.
-- Tools: recipe validation, static analysis, run execution, example listing, schema retrieval, and mapping generation.
+Or from source:
 
-Evals (inspect-ai)
+```bash
+git clone https://github.com/composable-delivery/snowfakery-mcp.git
+cd snowfakery-mcp
+uv sync
+uv run snowfakery-mcp
+```
 
-This repo includes an `inspect-ai` task that exercises the MCP tools for agentic evaluation. See `evals/` for examples and use `uv run inspect` helpers to run and view logs.
+### Connect to Claude (Desktop)
 
-Community & contribution
+Add to your Claude Desktop `claude_desktop_config.json`:
 
-We want this project to be welcoming and easy to engage with at any level. A few notes on where to ask questions and how we triage work:
+```json
+{
+  "mcpServers": {
+    "snowfakery-mcp": {
+      "command": "snowfakery-mcp"
+    }
+  }
+}
+```
 
-- **Discussions (recommended):** enable GitHub Discussions for general questions, how-tos, design conversations, and proposals. Use Discussions for:
-	- Asking how to model a dataset or recipe pattern
-	- Proposing new features or UX changes
-	- Roadmap conversations and community proposals
-	- Sharing examples and integrations
+Then ask Claude:
+> "Show me an example Snowfakery recipe" or "Help me write a recipe to generate 100 Salesforce accounts"
 
-- **Issues (bugs & feature requests):** use Issues for reproducible bugs and scoped feature requests. When filing an issue include:
-	- What you expected vs what happened
-	- Minimal repro steps (recipe text or snippet)
-	- OS / Python version and whether you ran from a release or from source
+## Features
 
-- **Conversion flow:** maintainers may convert a Discussion to an Issue (or link an Issue) when work is ready to be tracked. Issues that are accepted for work are added to the project board and assigned labels and milestones.
+**Resources** — Access docs, examples, and schemas:
+- Snowfakery documentation and recipe examples
+- JSON schema for recipe validation
+- Run outputs and artifacts
 
-- **Projects & tasks:** we use GitHub Projects (or the chosen project tool) to track work. The typical flow:
-	1. Discussion or Issue is created
-	2. Maintainers triage and label the Issue
-	3. If accepted, Issue is added to the project board and given an owner/estimate
-	4. Work is done in a feature branch and linked back to the Issue/Project
+**Tools** — Interact with recipes:
+- Validate & analyze recipes (catch errors early)
+- Run recipes and capture output
+- List & retrieve example recipes
+- Generate CumulusCI mapping files
 
-- **Pull requests:** keep PRs focused and small. Add tests for behavior changes and reference the related Issue. Expect review from one or more maintainers before merge.
+## Learn More
 
-- **Code of Conduct & Security:** see `CODE_OF_CONDUCT.md` and `SECURITY.md` for reporting guidance. For suspected security vulnerabilities, use GitHub Security Advisories rather than a public issue.
+- **[MCP_SERVER_SPEC.md](MCP_SERVER_SPEC.md)** — detailed design and tool catalog
+- **[Snowfakery docs](https://snowfakery.readthedocs.io/)** — recipe language reference
+- **[Contributing](CONTRIBUTING.md)** — how to contribute
 
-Where to get help quickly
+## Community
 
-- Open a new discussion (Questions category) for quick usage help.
-- If you’re running into a bug that reproduces reliably, open an Issue and attach a minimal recipe.
+We want this to be welcoming at any level. Questions, ideas, and contributions are always welcome!
 
-Releases
-
-We ship sdist and wheel artifacts and occasionally an experimental `.mcpb` bundle containing metadata and sample configs. See the Releases page on GitHub for assets and notes.
-
-Files to review
-
-- [MCP_SERVER_SPEC.md](MCP_SERVER_SPEC.md) — server design and tool catalog
-- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution and triage guidance
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards
-- [SECURITY.md](SECURITY.md) — vulnerability reporting
-
-If you'd like, I can open PRs to add Discussion templates and Issue forms, or create a small `community/` doc directory with examples for triage labels and templates.
-
-
-# snowfakery-mcp
-
-MCP server for authoring, analyzing, debugging, and running Snowfakery recipes.
-
-Upstream Snowfakery:
-
-- Repo: https://github.com/SFDO-Tooling/Snowfakery
-- Docs: https://snowfakery.readthedocs.io/
-
-
-See [MCP_SERVER_SPEC.md](MCP_SERVER_SPEC.md) for the initial server spec.
-
-## Run the server
-
-Install dependencies and run the MCP server over stdio:
-
-- `uv sync`
-- `uv run snowfakery-mcp`
-
-Install from releases / PyPI:
-
-- Recommended (isolated): `pipx install snowfakery-mcp`
-- Or: `python -m pip install snowfakery-mcp`
-- Then run: `snowfakery-mcp`
+- **Questions & ideas?** Open a [GitHub Discussion](https://github.com/composable-delivery/snowfakery-mcp/discussions)
+- **Found a bug?** [Open an Issue](https://github.com/composable-delivery/snowfakery-mcp/issues) with a minimal recipe
+- **Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Security concern?** See [SECURITY.md](SECURITY.md)
 
 ## Development
 
-- Install all groups (dev + evals): `uv sync --all-groups`
-- Run tests: `uv run pytest`
-- Typecheck: `uv run mypy snowfakery_mcp`
-- Lint: `uv run ruff check snowfakery_mcp tests scripts evals`
-- Format: `uv run ruff format snowfakery_mcp tests scripts evals`
+```bash
+# Install dev dependencies
+uv sync --all-groups
 
-Notes:
+# Run tests
+uv run pytest
 
-- The repo includes the upstream Snowfakery repo as a git submodule under `Snowfakery/`.
-- The MCP server serves `snowfakery://docs/*` and `snowfakery://examples/*` from the submodule when present, but falls back to a bundled snapshot shipped inside the `snowfakery_mcp` wheel for installs where submodules are not available.
-- When running any Snowfakery-related commands locally, prefer `uv run ...` to ensure you’re using the pinned environment.
+# Type check
+uv run mypy snowfakery_mcp
 
-## What’s included (MVP)
+# Lint & format
+uv run ruff check snowfakery_mcp tests scripts evals
+uv run ruff format snowfakery_mcp tests scripts evals
+```
 
-- Resources:
-	- `snowfakery://schema/recipe-jsonschema`
-	- `snowfakery://docs/index` / `snowfakery://docs/extending` / `snowfakery://docs/salesforce` / `snowfakery://docs/architecture`
-	- `snowfakery://examples/list` and `snowfakery://examples/{name}`
-	- `snowfakery://runs/{run_id}/{artifact}` for run artifacts
-- Tools:
-	- `list_capabilities`, `list_examples`, `get_example`, `get_schema`, `search_docs`
-	- `validate_recipe`, `analyze_recipe`, `run_recipe`, `generate_mapping`
+### Evals (Agentic Testing)
 
-## Evals (inspect-ai)
+This repo includes `inspect-ai` tasks for testing the MCP server with AI models:
 
-For more agentic evals (tool use + iterative debugging), this repo includes an `inspect-ai` task that exposes the full MCP tool suite to the model.
+```bash
+# Install eval dependencies
+uv sync --group evals
 
-- Install eval deps:
-	- `uv sync --group evals`
-- Run:
-	- `uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model <api>/<model_name>`
-	- (Optional) set a base URL with `INSPECT_EVAL_MODEL_BASE_URL` or `--model-base-url`.
+# Run evaluation
+uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-4o-mini
+```
 
-Examples:
+See [evals/](evals/) for more examples and troubleshooting.
 
-- `uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-4o-mini`
-- `OPENAI_API_KEY=$GITHUB_TOKEN INSPECT_EVAL_MODEL_BASE_URL=https://models.inference.ai.azure.com uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-4o-mini`
+## Notes
 
-GitHub Models notes:
-
-- Some GitHub Models endpoints do not support the OpenAI `responses` API yet. If you see `api_not_supported` or a 404 to `/responses`, force chat-completions mode:
-	- `OPENAI_API_KEY=$GITHUB_TOKEN INSPECT_EVAL_MODEL_BASE_URL=https://models.inference.ai.azure.com uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-5-mini -M responses_api=false --display plain`
-
-- GitHub Models can also rate-limit aggressively, and a parallel eval can *look* hung while requests are being retried. For the most reliable runs, go serial:
-	- `OPENAI_API_KEY=$GITHUB_TOKEN INSPECT_EVAL_MODEL_BASE_URL=https://models.inference.ai.azure.com uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-5-mini -M responses_api=false --display plain --max-samples 1 --max-connections 1`
-	- (Optional) add timeouts to fail fast: `--timeout 90 --attempt-timeout 90`
-
-- To run just one sample at a time:
-	- `... --sample-id debug_broken_reference`
-	- `... --sample-id salesforce_standard_objects`
-
-Troubleshooting:
-
-- If it "hangs" with no visible progress, use `--display plain` (or set `INSPECT_DISPLAY=plain`).
-- To narrow down a slow sample: add `--limit 1`.
-- If it still looks stuck, check whether the log is growing:
-	- `ls -lt logs | head`
-	- `uv run inspect log dump logs/<file>.eval --header-only`
-
-View logs:
-
-- List recent runs: `uv run inspect log list`
-- Dump a log as JSON: `uv run inspect log dump logs/<file>.eval`
-- Convert to JSON log format: `uv run inspect log convert logs/<file>.eval --to json --output-dir logs-json`
-- Start the log viewer (web UI): `uv run inspect view start --log-dir logs`
-
-Quick summaries (when JSON is huge):
-
-- Dump a log then summarize it:
-	- `uv run inspect log dump logs/<file>.eval > out.json`
-	- `uv run python evals/summarize_log.py out.json`
+- The repo includes the upstream Snowfakery repo as a git submodule (`Snowfakery/`) for development
+- When running from source, use `uv run ...` to ensure the pinned environment
+- PyPI installs use bundled docs/examples (no submodule required)
 
 ## Releases
 
-GitHub Releases attach:
-
-- Python sdist + wheel in `dist/`
-- An experimental `.mcpb` bundle (a ZIP with metadata + example config)
-
+See [GitHub Releases](https://github.com/composable-delivery/snowfakery-mcp/releases) for sdist, wheel, and experimental `.mcpb` bundles.
