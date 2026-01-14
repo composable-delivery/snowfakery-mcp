@@ -17,8 +17,39 @@ dev = [
 evals = ["inspect-ai>=0.3.160"]
 
 [tool.pytest.ini_options]
-addopts = "-q"
 testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+markers = [
+    "anyio: async integration tests",
+    "integration: integration tests",
+    "unit: unit tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["snowfakery_mcp"]
+omit = ["snowfakery_mcp/__main__.py", "snowfakery_mcp/bundled_*/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 75
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [project.scripts]
 snowfakery-mcp = "snowfakery_mcp.server:run"

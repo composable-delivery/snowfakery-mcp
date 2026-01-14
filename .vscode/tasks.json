@@ -98,9 +98,31 @@
                 "-v",
                 "--cov=snowfakery_mcp",
                 "--cov-report=html",
+                "--cov-report=term-missing",
+                "--cov-fail-under=80",
                 "tests/"
             ],
             "problemMatcher": [],
+            "group": "test"
+        },
+        {
+            "label": "Generate coverage report (HTML)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "pytest",
+                "--cov=snowfakery_mcp",
+                "--cov-report=html:htmlcov",
+                "--cov-report=term-missing:skip-covered",
+                "tests/"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true
+            },
             "group": "test"
         },
         {
