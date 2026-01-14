@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to create (e.g. v0.2.0). If blank, uses v<pyproject version>."
+        description: "Release tag to create (e.g. v0.2.0). Required when 'create_tag' is true."
         required: false
         default: ""
         type: string
@@ -112,23 +112,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v5
         with:
           version: latest
 
       - name: Cache uv
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
@@ -145,57 +145,34 @@ jobs:
         if: inputs.run_tests
         run: uv run pytest
 
-      - name: Read package version
-        id: version
-        run: |
-          VERSION=$(python - <<'PY'
-          from pathlib import Path
-          import tomllib
-
-          data = tomllib.loads(Path('pyproject.toml').read_bytes())
-          print(data['project']['version'])
-          PY
-          )
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Compute tag
+      - name: Validate tag input
         id: tag
-        run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            TAG="${{ inputs.tag }}"
-          else
-            TAG="v${{ steps.version.outputs.version }}"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Validate tag matches pyproject version
         run: |
           python - <<'PY'
           import os
           import re
 
           tag = os.environ.get('TAG', '')
+          if not tag:
+              raise SystemExit("When 'create_tag' is true, you must provide 'tag' (e.g. v0.2.0).")
+
           m = re.match(r'^v(?P<ver>\d+\.\d+\.\d+(?:[a-zA-Z0-9\.\-]+)?)$', tag)
           if not m:
               raise SystemExit(f"Tag '{tag}' does not look like vX.Y.Z")
 
-          version = os.environ.get('PKG_VERSION', '')
-          if not version:
-              raise SystemExit('Missing PKG_VERSION')
-
-          if version != m.group('ver'):
-              raise SystemExit(f"Tag version {m.group('ver')} != pyproject.toml version {version}")
-
-          print('OK:', tag, 'matches', version)
+          print('OK:', tag)
           PY
         env:
-          TAG: ${{ steps.tag.outputs.tag }}
-          PKG_VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ inputs.tag }}
+
+      - name: Set tag output
+        run: echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+        id: tag_out
 
       - name: Create and push tag
         run: |
           set -euo pipefail
-          TAG="${{ steps.tag.outputs.tag }}"
+          TAG="${{ steps.tag_out.outputs.tag }}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -216,23 +193,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v5
         with:
           version: latest
 
       - name: Cache uv
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
@@ -245,20 +222,8 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
-      - name: Read package version
+      - name: Derive version from tag
         id: version
-        run: |
-          VERSION=$(python - <<'PY'
-          from pathlib import Path
-          import tomllib
-
-          data = tomllib.loads(Path('pyproject.toml').read_bytes())
-          print(data['project']['version'])
-          PY
-          )
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Check tag matches pyproject version
         run: |
           python - <<'PY'
           import os
@@ -269,17 +234,13 @@ jobs:
           if not m:
               raise SystemExit(f"Tag '{tag}' does not look like vX.Y.Z")
 
-          version = os.environ.get('PKG_VERSION', '')
-          if not version:
-              raise SystemExit('Missing PKG_VERSION')
-
-          if version != m.group('ver'):
-              raise SystemExit(f"Tag version {m.group('ver')} != pyproject.toml version {version}")
-
-          print('OK:', tag, 'matches', version)
+          print(m.group('ver'))
           PY
-        env:
-          PKG_VERSION: ${{ steps.version.outputs.version }}
+          |
+          {
+            read -r VERSION
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          }
 
       - name: Generate third-party notices
         run: uv run python scripts/generate_third_party_notices.py
@@ -291,7 +252,40 @@ jobs:
         run: |
           mkdir -p release-assets
           cp THIRD_PARTY_NOTICES.md release-assets/THIRD_PARTY_NOTICES.md
-          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-${{ steps.version.outputs.version }}.mcpb"
+          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-${{ steps.version.outputs.version }}.mcpb" --version "${{ steps.version.outputs.version }}"
+
+      - name: Verify wheel version matches tag
+        run: |
+          python - <<'PY'
+          import glob
+          import os
+          import re
+          import zipfile
+
+          expected = os.environ['EXPECTED_VERSION']
+          wheels = glob.glob('dist/*.whl')
+          if not wheels:
+              raise SystemExit('No wheel found under dist/*.whl')
+
+          wheel = wheels[0]
+          with zipfile.ZipFile(wheel) as zf:
+              metas = [n for n in zf.namelist() if n.endswith('.dist-info/METADATA')]
+              if not metas:
+                  raise SystemExit('Wheel missing METADATA')
+              metadata = zf.read(metas[0]).decode('utf-8', errors='replace')
+
+          m = re.search(r'^Version:\s*(.+)\s*$', metadata, flags=re.MULTILINE)
+          if not m:
+              raise SystemExit('Could not find Version: in wheel METADATA')
+
+          actual = m.group(1).strip()
+          if actual != expected:
+              raise SystemExit(f'Wheel version {actual} != tag version {expected}')
+
+          print('OK:', wheel, 'version', actual)
+          PY
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
 
       - name: Generate SBOM (SPDX JSON)
         uses: anchore/sbom-action@v0
@@ -328,7 +322,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: pypi-dist
           path: pypi-dist

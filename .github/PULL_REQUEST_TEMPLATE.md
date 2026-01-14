@@ -1,3 +1,24 @@
+<!-- Describe the change and why it matters -->
+
+## Summary
+
+- What changed?
+- Why it matters?
+
+## Related issues
+
+- Fixes: # (issue number)
+
+## How to test
+
+- Steps to reproduce or test instructions
+
+## Checklist
+
+- [ ] Tests added or updated
+- [ ] Documentation updated (if applicable)
+- [ ] CHANGELOG entry (if required)
+
 # Pull Request
 
 ## Summary

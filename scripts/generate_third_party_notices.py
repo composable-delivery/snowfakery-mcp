@@ -20,7 +20,7 @@ import argparse
 import subprocess
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 FALLBACK_BSD_3_CLAUSE_TEXT = """BSD 3-Clause License
 
@@ -70,7 +70,9 @@ def _read_toml_project_version(pyproject_path: Path) -> str | None:
     if not isinstance(project, dict):
         return None
 
-    version = project.get("version")
+    project_dict = cast(dict[str, Any], project)
+
+    version: object = project_dict.get("version")
     if isinstance(version, str) and version.strip():
         return version.strip()
     return None
@@ -169,6 +171,7 @@ def _check_exact(path: Path, content: str) -> bool:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--check",

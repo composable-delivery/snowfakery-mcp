@@ -1,4 +1,29 @@
 name: Feature request
+about: Suggest an improvement or new feature
+title: ""
+labels: [enhancement]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Please provide a short description and how you'd use it.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line summary of the proposed feature
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this useful? What problem does it solve?
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know this is done? What does success look like?
+name: Feature request
 description: Suggest an idea or enhancement
 title: "feat: "
 labels: [enhancement]

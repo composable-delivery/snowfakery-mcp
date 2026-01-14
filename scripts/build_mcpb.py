@@ -16,7 +16,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
 import tomllib
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as dist_version
 from pathlib import Path
 from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -38,29 +42,74 @@ def _project_metadata() -> dict[str, str]:
     data = tomllib.loads(_read_text(pyproject))
     project = data.get("project", {})
     name = str(project.get("name", ""))
-    version = str(project.get("version", ""))
     description = str(project.get("description", ""))
-    return {"name": name, "version": version, "description": description}
+    return {"name": name, "description": description}
 
 
-def build_bundle(output_path: Path) -> None:
+def _git_describe_version(root: Path) -> str | None:
+    """Best-effort version from git tags (expects tags like vX.Y.Z)."""
+    try:
+        cp = subprocess.run(
+            ["git", "-C", str(root), "describe", "--tags", "--dirty", "--always"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+    desc = cp.stdout.strip()
+    if not desc:
+        return None
+
+    # Prefer a clean vX.Y.Z tag when present.
+    m = re.match(r"^v(?P<ver>\d+\.\d+\.\d+(?:[a-zA-Z0-9\.\-]+)?)$", desc)
+    if m:
+        return m.group("ver")
+    return None
+
+
+def _resolve_project_version(project_name: str, override: str | None) -> str:
+    if override:
+        return override
+
+    try:
+        return dist_version(project_name)
+    except PackageNotFoundError:
+        pass
+
+    return _git_describe_version(_project_root()) or "0.0.0"
+
+
+def _is_reasonable_pep440(version_str: str) -> bool:
+    # Good enough for our use: allow common semver-ish + pre/dev local suffixes.
+    return bool(re.match(r"^\d+\.\d+\.\d+(?:[a-zA-Z0-9\.\-]+)?$", version_str))
+
+
+def build_bundle(output_path: Path, *, override_version: str | None = None) -> None:
     """Build a .mcpb ZIP bundle at the requested output path."""
     root = _project_root()
     meta = _project_metadata()
+    resolved_version = _resolve_project_version(meta["name"], override_version)
 
     # A pragmatic default: installing from PyPI (or a wheel) then running the console script.
     # Most MCP desktop clients can run an arbitrary command.
     recommended_command = "snowfakery-mcp"
 
+    if _is_reasonable_pep440(resolved_version):
+        recommended_install = f"pipx install {meta['name']}=={resolved_version}"
+    else:
+        recommended_install = f"pipx install {meta['name']}"
+
     manifest: dict[str, Any] = {
         "bundle_format": "experimental",
         "type": "mcp-server",
         "name": meta["name"],
-        "version": meta["version"],
+        "version": resolved_version,
         "description": meta["description"],
         "python": {
             "package": meta["name"],
-            "recommended_install": f"pipx install {meta['name']}=={meta['version']}",
+            "recommended_install": recommended_install,
         },
         "launch": {
             "command": recommended_command,
@@ -110,6 +159,12 @@ def main() -> int:
         required=True,
         help="Output .mcpb file path (a ZIP archive with .mcpb extension)",
     )
+    parser.add_argument(
+        "--version",
+        required=False,
+        default=None,
+        help="Override bundle version (normally resolved from package metadata or git tags)",
+    )
     args = parser.parse_args()
 
     out = Path(args.output)
@@ -117,7 +172,7 @@ def main() -> int:
         # Keep it obvious to users what this is.
         out = out.with_suffix(out.suffix + ".mcpb")
 
-    build_bundle(out)
+    build_bundle(out, override_version=args.version)
     print(str(out))
     return 0
 

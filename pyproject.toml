@@ -1,6 +1,6 @@
 [project]
 name = "snowfakery-mcp"
-version = "0.0.1"
+dynamic = ["version"]
 description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -27,8 +27,14 @@ snowfakery-mcp = "snowfakery_mcp.server:run"
 package = true
 
 [build-system]
-requires = ["hatchling>=1.27.0"]
+requires = ["hatchling>=1.27.0", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
 packages = ["snowfakery_mcp"]

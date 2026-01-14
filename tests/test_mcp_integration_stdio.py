@@ -1,5 +1,7 @@
 """Integration tests for the MCP server over stdio."""
 
+# pylint: disable=missing-function-docstring,redefined-outer-name
+
 from __future__ import annotations
 
 import json
@@ -16,7 +18,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 def _resource_text(result: Any) -> str:
     contents = getattr(result, "contents", None)
     assert isinstance(contents, list) and contents, "Expected non-empty resource contents"
-    first = contents[0]
+    first = cast(Any, contents[0])
     text = getattr(first, "text", None)
     assert isinstance(text, str), "Expected text resource contents"
     return text
@@ -25,7 +27,8 @@ def _resource_text(result: Any) -> str:
 def _tool_payload_text(result: Any) -> str:
     content = getattr(result, "content", None)
     assert isinstance(content, list) and content, "Expected non-empty tool result"
-    text = getattr(content[0], "text", None)
+    first = cast(Any, content[0])
+    text = getattr(first, "text", None)
     assert isinstance(text, str), "Expected text tool result"
     return text
 

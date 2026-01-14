@@ -1,0 +1,43 @@
+name: Bug report
+about: Create a report to help us reproduce and fix a bug
+title: ""
+labels: [bug]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in the sections below.
+  - type: input
+    id: expected
+    attributes:
+      label: What you expected to happen
+      description: A short description of the expected behavior
+      placeholder: ""
+  - type: input
+    id: actual
+    attributes:
+      label: What actually happened
+      description: A short description of the observed behavior
+      placeholder: ""
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Provide a minimal recipe snippet or steps to reproduce
+      placeholder: |
+        ```yaml
+        # your recipe snippet here
+        ```
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, and whether you ran from a release or from source
+      placeholder: "macOS 13.4, Python 3.11, pipx install"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traceback
+      description: Include any relevant logs (please redact secrets)
+      placeholder: ""
