@@ -1,6 +1,6 @@
 [project]
 name = "snowfakery-mcp"
-version = "0.1.0"
+version = "0.0.1"
 description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
