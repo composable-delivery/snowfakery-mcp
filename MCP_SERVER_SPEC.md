@@ -1,6 +1,7 @@
 # Server Specification
 
 This document describes the design, capabilities, and tool catalog for the Snowfakery MCP server. It's intended for:
+
 - **Contributors** building new tools or features
 - **Integrators** understanding what the server can do
 - **Developers** extending or embedding this server
@@ -16,9 +17,11 @@ The Snowfakery MCP server exposes Snowfakery's data generation capabilities thro
 ## Architecture
 
 ### Server name
+
 - `snowfakery-mcp`
 
 ### Implementation
+
 - Python server using `fastmcp`
 - Embeds Snowfakery as a library (`snowfakery>=4.2.1`)
 - Runs in a workspace/project directory with access to bundled Snowfakery docs and examples
@@ -39,6 +42,7 @@ The typical workflow:
 ### In scope
 
 **Core capabilities:**
+
 - Recipe authoring assistance with schema, docs, and examples
 - Recipe validation and error reporting with source locations
 - Recipe execution with multiple output formats (text, JSON, CSV, diagrams)
@@ -46,6 +50,7 @@ The typical workflow:
 - Continuation workflows and CumulusCI mapping generation
 
 **Supported outputs:**
+
 - Text/debug output
 - JSON and CSV export
 - Diagram outputs (dot, svg, png)
@@ -62,17 +67,27 @@ The typical workflow:
 The server exposes resources in the `snowfakery://` scheme:
 
 ### Documentation and schema
+
 - `snowfakery://schema/recipe-jsonschema` — JSON Schema for recipe validation
 - `snowfakery://docs/index` — Main language documentation
 - `snowfakery://docs/extending` — Plugin authoring guide
 - `snowfakery://docs/salesforce` — Salesforce integration concepts
+- `snowfakery://docs/embedding` — Embedding Snowfakery in Python applications
 - `snowfakery://docs/architecture` — Interpreter architecture notes
 
+### Discovery resources
+
+- `snowfakery://providers/list` — Available Faker providers and methods, organized by category
+- `snowfakery://plugins/list` — Built-in Snowfakery plugins with parameters and examples
+- `snowfakery://formats/info` — Supported output formats with use cases and dependencies
+
 ### Examples
+
 - `snowfakery://examples/list` — Available example recipes
 - `snowfakery://examples/{name}` — Individual example recipe
 
 ### Run artifacts
+
 - `snowfakery://runs/{run_id}/recipe` — Original recipe
 - `snowfakery://runs/{run_id}/stdout` — Debug/text output
 - `snowfakery://runs/{run_id}/output.json` — JSON export
@@ -91,6 +106,7 @@ Returns server version, supported features, and limits.
 **Inputs:** none
 
 **Outputs:**
+
 - Snowfakery version
 - Supported output formats
 - Server limits (max reps, timeouts, output size)
@@ -100,9 +116,11 @@ Returns server version, supported features, and limits.
 Lists available example recipes.
 
 **Inputs:**
+
 - `prefix` (optional) — filter by name prefix
 
 **Outputs:**
+
 - Example names with short descriptions
 
 ### get_example
@@ -110,9 +128,11 @@ Lists available example recipes.
 Retrieves a specific example recipe.
 
 **Inputs:**
+
 - `name` (required)
 
 **Outputs:**
+
 - Recipe text
 - Provenance (repo path)
 
@@ -123,6 +143,7 @@ Returns the JSON Schema for recipe validation.
 **Inputs:** none
 
 **Outputs:**
+
 - Recipe JSON Schema
 
 ### search_docs
@@ -130,9 +151,11 @@ Returns the JSON Schema for recipe validation.
 Full-text search across Snowfakery documentation.
 
 **Inputs:**
+
 - `query` (required)
 
 **Outputs:**
+
 - Matching documentation sections with snippets
 
 ### validate_recipe
@@ -140,10 +163,12 @@ Full-text search across Snowfakery documentation.
 Validates a recipe without executing it.
 
 **Inputs:**
+
 - `recipe_text` or `recipe_path`
 - `strict_mode` (optional, default: true)
 
 **Outputs:**
+
 - Validation result: `valid` or `invalid`
 - Error list with source locations
 - Warnings
@@ -153,9 +178,11 @@ Validates a recipe without executing it.
 Performs static analysis on a recipe structure.
 
 **Inputs:**
+
 - `recipe_text` or `recipe_path`
 
 **Outputs:**
+
 - Tables and fields
 - Object relationships
 - Macros and includes
@@ -167,6 +194,7 @@ Performs static analysis on a recipe structure.
 Executes a recipe and captures output.
 
 **Inputs:**
+
 - `recipe_text` or `recipe_path`
 - `reps` or `target_number` (optional stopping criteria)
 - `output_format` (optional, default: `txt`)
@@ -174,6 +202,7 @@ Executes a recipe and captures output.
 - `validate_only` (optional, for validation-only runs)
 
 **Outputs:**
+
 - Execution status (success/failure)
 - Resource URI for output
 - Error list with messages and line numbers
@@ -184,10 +213,12 @@ Executes a recipe and captures output.
 Generates a CumulusCI mapping file from a recipe.
 
 **Inputs:**
+
 - `recipe_text` or `recipe_path`
 - `load_declarations_paths` (optional, for extra declarations)
 
 **Outputs:**
+
 - Mapping YAML content
 - Resource URI for full mapping
 
@@ -196,20 +227,25 @@ Generates a CumulusCI mapping file from a recipe.
 Snowfakery can read/write files and spawn large generations. The MCP server enforces safe defaults:
 
 ### File access
+
 - Limited to explicitly provided paths and workspace root (no `..` escape)
 - Server-managed temp outputs
 
 ### Execution
+
 - Max row and rep limits (configurable)
 - Runtime timeout per run
 - Output size cap (truncate + provide file resource for full output)
 
 ### Networking
+
 - Disabled by default (can be allowlisted for Salesforce query plugins with explicit opt-in)
 
 ### Database
+
 - Write access via `--dburl` is disabled by default
 
 ### Data handling
+
 - Continuation files may contain generated values (not secrets)
 - Tool results avoid leaking environment variables or secrets

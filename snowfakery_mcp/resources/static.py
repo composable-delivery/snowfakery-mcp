@@ -63,6 +63,11 @@ def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("arch", "ArchIndex.md"))
 
+    @mcp.resource("snowfakery://docs/embedding")
+    def docs_embedding_resource() -> str:
+        root = docs_root(paths)
+        return read_text_utf8(root.joinpath("embedding.md"))
+
     @mcp.resource("snowfakery://examples/list")
     def examples_list_resource() -> str:
         root = examples_root(paths)

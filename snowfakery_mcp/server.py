@@ -5,6 +5,7 @@ from mcp.server.fastmcp import FastMCP
 from snowfakery_mcp.core.config import Config
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.prompts import register_prompts
+from snowfakery_mcp.resources.discovery import register_discovery_resources
 from snowfakery_mcp.resources.runs import register_run_resources
 from snowfakery_mcp.resources.static import register_static_resources
 from snowfakery_mcp.tools.analyze import register_analyze_tool
@@ -23,6 +24,7 @@ def create_app() -> FastMCP:
     app = FastMCP("snowfakery-mcp")
 
     register_static_resources(app, paths)
+    register_discovery_resources(app)
     register_run_resources(app, paths)
 
     register_capabilities_tools(app, config)
