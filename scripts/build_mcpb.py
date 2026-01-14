@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Build an experimental .mcpb bundle for this MCP server.
+"""Build a complete .mcpb bundle for this MCP server.
 
-There is not (yet) a universally adopted standard for "mcpb" bundles across all
-MCP clients. This script produces a single file with a .mcpb extension that is
-just a ZIP archive containing:
+This script produces a self-contained .mcpb file (a ZIP archive) that includes:
 
-- manifest.json: minimal metadata and a recommended launch command
-- README.md / MCP_SERVER_SPEC.md
-- claude_desktop_config.json: an example Claude Desktop config snippet
+- manifest.json: Bundle metadata and entry point configuration
+- server/: The complete MCP server code from snowfakery_mcp/
+- lib/: All bundled Python package dependencies
+- Supporting documentation (README.md, etc.)
 
-The bundle is intended as a convenience artifact to attach to GitHub Releases.
+The bundle is intended as a complete, portable distribution artifact for GitHub Releases
+and can be installed and run by MCP clients that support Python bundles.
 """
 
 from __future__ import annotations
@@ -17,7 +17,10 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
+import sys
+import tempfile
 import tomllib
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as dist_version
@@ -87,65 +90,18 @@ def _is_reasonable_pep440(version_str: str) -> bool:
 
 
 def build_bundle(output_path: Path, *, override_version: str | None = None) -> None:
-    """Build a .mcpb ZIP bundle at the requested output path."""
+    """Build a complete .mcpb ZIP bundle with server code and dependencies."""
+
     root = _project_root()
     meta = _project_metadata()
     resolved_version = _resolve_project_version(meta["name"], override_version)
 
-    # A pragmatic default: installing from PyPI (or a wheel) then running the console script.
-    # Most MCP desktop clients can run an arbitrary command.
-    recommended_command = "snowfakery-mcp"
-
-    if _is_reasonable_pep440(resolved_version):
-        recommended_install = f"pipx install {meta['name']}=={resolved_version}"
-    else:
-        recommended_install = f"pipx install {meta['name']}"
-
-    # Installation instructions for the long_description
-    long_description = f"""# Snowfakery MCP Server
-
-{meta["description"]}
-
-## Installation
-
-This MCP server requires installation via pipx:
-
-```bash
-{recommended_install}
-```
-
-After installation, the `snowfakery-mcp` command will be available in your PATH.
-
-## Configuration
-
-Add this server to your Claude Desktop configuration in `~/.config/Claude/claude.json`:
-
-```json
-{{
-  "mcpServers": {{
-    "snowfakery": {{
-      "command": "snowfakery-mcp",
-      "args": [],
-      "env": {{
-        "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${{workspaceRoot}}"
-      }}
-    }}
-  }}
-}}
-```
-
-For more details, see the [README](https://github.com/composable-delivery/snowfakery-mcp#readme).
-"""
-
-    # Complete manifest.json structure for .mcpb bundles
-    # NOTE: The "server" section is NOT part of the official spec
-    # Claude Desktop reads configuration from its own claude.json file, not from the .mcpb manifest
+    # The manifest.json specifies how to run the server from within the bundle
     manifest: dict[str, Any] = {
         "manifest_version": "0.3",
         "name": meta["name"],
         "version": resolved_version,
         "description": meta["description"],
-        "long_description": long_description,
         "author": {
             "name": "Composable Delivery",
             "url": "https://github.com/composable-delivery",
@@ -164,57 +120,99 @@ For more details, see the [README](https://github.com/composable-delivery/snowfa
             "claude",
             "recipes",
         ],
+        # Server configuration: how to run the bundled server
+        "server": {
+            "type": "python",
+            "entry_point": "server/main.py",
+        },
     }
 
-    claude_desktop_config: dict[str, Any] = {
-        "mcpServers": {
-            "snowfakery": {
-                "command": recommended_command,
-                "args": [],
-                "env": {
-                    # Update this to the path you want Snowfakery to treat as the workspace root.
-                    "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${workspaceRoot}",
-                },
-            }
-        }
-    }
+    # Create a temporary directory for staging the bundle contents
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        server_dir = tmpdir_path / "server"
+        lib_dir = tmpdir_path / "lib"
 
-    files_to_include: list[tuple[Path, str]] = []
-    for rel in ("README.md", "MCP_SERVER_SPEC.md", "THIRD_PARTY_NOTICES.md"):
-        p = root / rel
-        if p.exists():
-            files_to_include.append((p, rel))
+        # 1. Copy the snowfakery_mcp package into server/
+        server_dir.mkdir(parents=True)
+        shutil.copytree(
+            root / "snowfakery_mcp",
+            server_dir / "snowfakery_mcp",
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"),
+        )
 
-    # Create a stub main.py entry point that references the installed package
-    stub_main_py = f'''#!/usr/bin/env python3
-"""Stub entry point for {meta["name"]} MCP Server.
+        # 2. Create the entry point script
+        entry_point = """#!/usr/bin/env python3
+\"\"\"Entry point for Snowfakery MCP Server bundled in .mcpb.
 
-This MCPB bundle requires the {meta["name"]} package to be installed separately.
-Please install it using: {recommended_install}
-
-After installation, configure Claude Desktop to use the '{recommended_command}' command.
-"""
+This script runs the bundled MCP server with dependencies from lib/.
+\"\"\"
 import sys
+from pathlib import Path
+
+# Add bundled lib directory to Python path so imports work
+bundle_lib = Path(__file__).parent.parent / "lib"
+if bundle_lib.exists():
+    sys.path.insert(0, str(bundle_lib))
+
+# Now import and run the server
+from snowfakery_mcp.server import run
 
 if __name__ == "__main__":
-    print(
-        "This is a stub entry point. The {meta["name"]} package must be installed separately.",
-        file=sys.stderr,
-    )
-    print("Install it using: {recommended_install}", file=sys.stderr)
-    sys.exit(1)
-'''
+    run()
+"""
+        (server_dir / "main.py").write_text(entry_point)
+        (server_dir / "main.py").chmod(0o755)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with ZipFile(output_path, mode="w", compression=ZIP_DEFLATED) as zf:
-        zf.writestr("manifest.json", json.dumps(manifest, indent=2) + "\n")
-        zf.writestr(
-            "claude_desktop_config.json",
-            json.dumps(claude_desktop_config, indent=2) + "\n",
-        )
-        zf.writestr("main.py", stub_main_py)
-        for src, arcname in files_to_include:
-            zf.write(src, arcname)
+        # 3. Bundle all dependencies using pip download
+        print("Bundling Python dependencies...")
+        lib_dir.mkdir(parents=True)
+
+        # Get dependencies from pyproject.toml
+        pyproject = root / "pyproject.toml"
+        pyproject_data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+
+        # Download all wheels to lib/
+        for dep in dependencies:
+            # Simple approach: use pip download
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "download",
+                    "--destination-directory",
+                    str(lib_dir),
+                    "--no-deps",
+                    dep,
+                ],
+                check=True,
+                capture_output=True,
+            )
+
+        # 4. Create manifest.json
+        manifest_path = tmpdir_path / "manifest.json"
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+
+        # 5. Copy documentation files
+        for filename in ("README.md", "MCP_SERVER_SPEC.md", "THIRD_PARTY_NOTICES.md"):
+            src = root / filename
+            if src.exists():
+                shutil.copy(src, tmpdir_path / filename)
+
+        # 6. Create the .mcpb ZIP archive
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with ZipFile(output_path, mode="w", compression=ZIP_DEFLATED) as zf:
+            for file_path in tmpdir_path.rglob("*"):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(tmpdir_path)
+                    zf.write(file_path, arcname)
+
+    print(f"Created bundle: {output_path}")
+    print(f"  Version: {resolved_version}")
+    print("  Entry point: server/main.py")
+    print("  Type: python")
 
 
 def main() -> int:

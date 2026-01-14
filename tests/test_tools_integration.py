@@ -2,25 +2,21 @@
 
 from __future__ import annotations
 
-import json
 import textwrap
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 from fastmcp import Client
-
-if TYPE_CHECKING:
-    pass
 
 
 def get_tool_data(result: Any) -> dict[str, Any]:
     """Extract data from a FastMCP tool result."""
     # FastMCP CallToolResult has .data for structured responses
     if hasattr(result, "data") and result.data is not None:
-        data: Any = result.data
+        data = result.data
         # Handle pydantic models
         if hasattr(data, "model_dump"):
-            return dict(data.model_dump())
+            return data.model_dump()
         if isinstance(data, dict):
             return data
         # FastMCP creates dynamic Root objects - convert via __dict__
@@ -30,24 +26,20 @@ def get_tool_data(result: Any) -> dict[str, Any]:
         return {"result": data}
     # Fallback to structured_content
     if hasattr(result, "structured_content") and result.structured_content:
-        structured: Any = result.structured_content
-        if isinstance(structured, dict):
-            return structured
-        return {"result": structured}
+        return result.structured_content
     # Last resort: parse from text content
     if hasattr(result, "content") and result.content:
-        text: str = (
+        import json
+
+        text = (
             result.content[0].text if hasattr(result.content[0], "text") else str(result.content[0])
         )
-        parsed: Any = json.loads(text)
-        if isinstance(parsed, dict):
-            return parsed
-        return {"result": parsed}
+        return json.loads(text)
     raise ValueError(f"Cannot extract data from result: {result}")
 
 
 @pytest.mark.anyio
-async def test_validate_recipe_with_invalid_yaml(mcp_client: Client[Any]) -> None:
+async def test_validate_recipe_with_invalid_yaml(mcp_client: Client) -> None:
     """Test validate_recipe with invalid YAML syntax."""
     recipe = "invalid: [yaml: syntax:"
 
@@ -62,7 +54,7 @@ async def test_validate_recipe_with_invalid_yaml(mcp_client: Client[Any]) -> Non
 
 
 @pytest.mark.anyio
-async def test_validate_recipe_with_no_snowfakery_version(mcp_client: Client[Any]) -> None:
+async def test_validate_recipe_with_no_snowfakery_version(mcp_client: Client) -> None:
     """Test validate_recipe with recipe missing required fields."""
     recipe = textwrap.dedent(
         """
@@ -82,7 +74,7 @@ async def test_validate_recipe_with_no_snowfakery_version(mcp_client: Client[Any
 
 
 @pytest.mark.anyio
-async def test_validate_recipe_strict_mode(mcp_client: Client[Any]) -> None:
+async def test_validate_recipe_strict_mode(mcp_client: Client) -> None:
     """Test validate_recipe with strict mode enabled."""
     recipe = textwrap.dedent(
         """
@@ -103,7 +95,7 @@ async def test_validate_recipe_strict_mode(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_analyze_recipe_valid(mcp_client: Client[Any]) -> None:
+async def test_analyze_recipe_valid(mcp_client: Client) -> None:
     """Test analyze_recipe with valid recipe."""
     recipe = textwrap.dedent(
         """
@@ -126,7 +118,7 @@ async def test_analyze_recipe_valid(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_run_recipe_with_json_output(mcp_client: Client[Any]) -> None:
+async def test_run_recipe_with_json_output(mcp_client: Client) -> None:
     """Test run_recipe with JSON output format."""
     recipe = textwrap.dedent(
         """
@@ -155,7 +147,7 @@ async def test_run_recipe_with_json_output(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_run_recipe_with_invalid_recipe(mcp_client: Client[Any]) -> None:
+async def test_run_recipe_with_invalid_recipe(mcp_client: Client) -> None:
     """Test run_recipe with invalid recipe."""
     recipe = "invalid: [recipe:"
 
@@ -176,19 +168,18 @@ async def test_run_recipe_with_invalid_recipe(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_list_capabilities(mcp_client: Client[Any]) -> None:
+async def test_list_capabilities(mcp_client: Client) -> None:
     """Test list_capabilities tool."""
     result = await mcp_client.call_tool("list_capabilities", {})
 
     payload = get_tool_data(result)
-    assert "limits" in payload
-    assert "max_reps" in payload["limits"]
-    assert "max_target_count" in payload["limits"]
-    assert "max_capture_chars" in payload["limits"]
+    assert "max_reps" in payload
+    assert "max_target_count" in payload
+    assert "max_capture_chars" in payload
 
 
 @pytest.mark.anyio
-async def test_list_examples(mcp_client: Client[Any]) -> None:
+async def test_list_examples(mcp_client: Client) -> None:
     """Test list_examples tool."""
     result = await mcp_client.call_tool("list_examples", {})
 
@@ -198,7 +189,7 @@ async def test_list_examples(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_list_examples_with_prefix(mcp_client: Client[Any]) -> None:
+async def test_list_examples_with_prefix(mcp_client: Client) -> None:
     """Test list_examples tool with prefix filter."""
     result = await mcp_client.call_tool("list_examples", {"prefix": "comp"})
 
@@ -210,9 +201,9 @@ async def test_list_examples_with_prefix(mcp_client: Client[Any]) -> None:
 
 
 @pytest.mark.anyio
-async def test_get_example(mcp_client: Client[Any]) -> None:
+async def test_get_example(mcp_client: Client) -> None:
     """Test get_example tool."""
     result = await mcp_client.call_tool("get_example", {"name": "company.yml"})
 
     payload = get_tool_data(result)
-    assert "text" in payload or "error" in payload
+    assert "content" in payload or "error" in payload
