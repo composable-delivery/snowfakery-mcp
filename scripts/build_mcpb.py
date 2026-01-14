@@ -101,23 +101,70 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
     else:
         recommended_install = f"pipx install {meta['name']}"
 
+    # Installation instructions for the long_description
+    long_description = f"""# Snowfakery MCP Server
+
+{meta["description"]}
+
+## Installation
+
+This MCP server requires installation via pipx:
+
+```bash
+{recommended_install}
+```
+
+After installation, the `snowfakery-mcp` command will be available in your PATH.
+
+## Configuration
+
+Add this server to your Claude Desktop configuration:
+
+```json
+{{
+  "mcpServers": {{
+    "snowfakery": {{
+      "command": "snowfakery-mcp",
+      "args": [],
+      "env": {{
+        "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${{workspaceRoot}}"
+      }}
+    }}
+  }}
+}}
+```
+
+For more details, see the [README](https://github.com/composable-delivery/snowfakery-mcp#readme).
+"""
+
     manifest: dict[str, Any] = {
-        "bundle_format": "experimental",
-        "type": "mcp-server",
+        "manifest_version": "0.3",
         "name": meta["name"],
         "version": resolved_version,
         "description": meta["description"],
-        "python": {
-            "package": meta["name"],
-            "recommended_install": recommended_install,
+        "long_description": long_description,
+        "author": {
+            "name": "Composable Delivery",
+            "url": "https://github.com/composable-delivery/snowfakery-mcp",
         },
-        "launch": {
-            "command": recommended_command,
-            "args": [],
-            "env": {
-                "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${workspaceRoot}",
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/composable-delivery/snowfakery-mcp.git",
+        },
+        "homepage": "https://github.com/composable-delivery/snowfakery-mcp",
+        "documentation": "https://github.com/composable-delivery/snowfakery-mcp#readme",
+        "support": "https://github.com/composable-delivery/snowfakery-mcp/issues",
+        "license": "MIT OR Apache-2.0",
+        "server": {
+            "type": "python",
+            "entry_point": "main.py",
+            "mcp_config": {
+                "command": recommended_command,
+                "args": [],
+                "env": {
+                    "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${workspaceRoot}",
+                },
             },
-            "transport": "stdio",
         },
     }
 
@@ -140,6 +187,26 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
         if p.exists():
             files_to_include.append((p, rel))
 
+    # Create a stub main.py entry point that references the installed package
+    stub_main_py = '''#!/usr/bin/env python3
+"""Stub entry point for Snowfakery MCP Server.
+
+This MCPB bundle requires the snowfakery-mcp package to be installed separately.
+Please install it using: pipx install snowfakery-mcp
+
+After installation, configure Claude Desktop to use the 'snowfakery-mcp' command.
+"""
+import sys
+
+if __name__ == "__main__":
+    print(
+        "This is a stub entry point. The snowfakery-mcp package must be installed separately.",
+        file=sys.stderr,
+    )
+    print("Install it using: pipx install snowfakery-mcp", file=sys.stderr)
+    sys.exit(1)
+'''
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with ZipFile(output_path, mode="w", compression=ZIP_DEFLATED) as zf:
         zf.writestr("manifest.json", json.dumps(manifest, indent=2) + "\n")
@@ -147,6 +214,7 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
             "claude_desktop_config.json",
             json.dumps(claude_desktop_config, indent=2) + "\n",
         )
+        zf.writestr("main.py", stub_main_py)
         for src, arcname in files_to_include:
             zf.write(src, arcname)
 
