@@ -32,6 +32,75 @@ permissions:
   attestations: write
 
 jobs:
+  dry-run:
+    name: Build (dry run)
+    if: github.event_name == 'workflow_dispatch' && !inputs.create_tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Install deps (frozen)
+        run: uv sync --all-groups --frozen
+
+      - name: Run tests
+        if: inputs.run_tests
+        run: uv run pytest
+
+      - name: Generate third-party notices
+        run: uv run python scripts/generate_third_party_notices.py
+
+      - name: Build wheel + sdist
+        run: uv build
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          cp THIRD_PARTY_NOTICES.md release-assets/THIRD_PARTY_NOTICES.md
+          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-dev.mcpb"
+
+      - name: Prepare PyPI dist (wheel + sdist only)
+        run: |
+          mkdir -p pypi-dist
+          cp dist/*.whl dist/*.tar.gz pypi-dist/
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release-assets
+          if-no-files-found: error
+
+      - name: Upload PyPI dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-dist
+          path: pypi-dist
+          if-no-files-found: error
+
   tag:
     name: Create release tag (manual)
     if: github.event_name == 'workflow_dispatch' && inputs.create_tag
@@ -218,37 +287,51 @@ jobs:
       - name: Build wheel + sdist
         run: uv build
 
-      - name: Include third-party notices in dist/
+      - name: Prepare release assets
         run: |
-          cp THIRD_PARTY_NOTICES.md dist/THIRD_PARTY_NOTICES.md
-
-      - name: Build experimental .mcpb bundle
-        run: |
-          python scripts/build_mcpb.py --output "dist/snowfakery-mcp-${{ steps.version.outputs.version }}.mcpb"
+          mkdir -p release-assets
+          cp THIRD_PARTY_NOTICES.md release-assets/THIRD_PARTY_NOTICES.md
+          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-${{ steps.version.outputs.version }}.mcpb"
 
       - name: Generate SBOM (SPDX JSON)
         uses: anchore/sbom-action@v0
         with:
           path: .
           format: spdx-json
-          output-file: dist/sbom.spdx.json
+          output-file: release-assets/sbom.spdx.json
+
+      - name: Prepare PyPI dist (wheel + sdist only)
+        run: |
+          mkdir -p pypi-dist
+          cp dist/*.whl dist/*.tar.gz pypi-dist/
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: dist/*
+          subject-path: |
+            dist/*
+            release-assets/*
 
       - name: Attest SBOM
         uses: actions/attest-sbom@v3
         with:
-          sbom-path: dist/sbom.spdx.json
-          subject-path: dist/*
+          sbom-path: release-assets/sbom.spdx.json
+          subject-path: |
+            dist/*
+            release-assets/*
 
-      - name: Upload dist artifacts
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release-assets
+          if-no-files-found: error
+
+      - name: Upload PyPI dist
         uses: actions/upload-artifact@v6
         with:
-          name: dist
-          path: dist
+          name: pypi-dist
+          path: pypi-dist
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -258,6 +341,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             dist/*
+            release-assets/*
 
   publish-pypi:
     runs-on: ubuntu-latest
@@ -271,9 +355,9 @@ jobs:
 
     steps:
       - name: Download dist artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: pypi-dist
           path: dist
 
       - name: Publish to PyPI (Trusted Publishing)

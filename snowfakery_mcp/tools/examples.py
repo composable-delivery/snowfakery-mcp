@@ -21,7 +21,6 @@ from snowfakery_mcp.core.text import read_text_utf8
 
 def register_example_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
     """Register tools for listing and fetching bundled Snowfakery examples."""
-
     @mcp.tool()
     def list_examples(prefix: str | None = None) -> dict[str, Any]:
         """List available Snowfakery example recipe files under Snowfakery/examples."""

@@ -3,7 +3,7 @@
 This repo publishes releases via GitHub Actions.
 
 - A **real release** (GitHub Release + attached artifacts + PyPI publish) happens on **pushing a git tag** matching `v*`.
-- A **manual run from the GitHub UI** (`workflow_dispatch`) is supported, but it is effectively a **dry run**: it builds + tests and uploads build artifacts to the workflow run, but it does **not** create a GitHub Release or publish to PyPI.
+- A **manual run from the GitHub UI** (`workflow_dispatch`) is supported as a **dry run build**: it builds + (optionally) tests and uploads build artifacts to the workflow run, but it does **not** create a GitHub Release or publish to PyPI.
 
 ## Prereqs (local)
 
@@ -43,8 +43,8 @@ This repo publishes releases via GitHub Actions.
 		- run tests
 		- build wheel + sdist (`uv build`)
 		- build an experimental `.mcpb` bundle (`scripts/build_mcpb.py`)
-		- attach all `dist/*` files to a GitHub Release (release notes auto-generated)
-		- publish to PyPI via Trusted Publishing (tags only)
+		- attach `dist/*` + `release-assets/*` to a GitHub Release (release notes auto-generated)
+		- publish `dist/*.whl` + `dist/*.tar.gz` to PyPI via Trusted Publishing (tags only)
 
 ## Can I release via the GitHub UI?
 
@@ -62,9 +62,10 @@ This creates the git tag (`refs/tags/vX.Y.Z`), which should trigger the `on: pus
 
 2) **Run the workflow manually (UI)**
 
+
 - Go to **Actions** → **Release** → **Run workflow**
 
-This is useful to verify that builds/tests pass on GitHub runners, but it will not create a GitHub Release nor publish to PyPI because those steps are guarded by `if: startsWith(github.ref, 'refs/tags/')`.
+This is useful to verify that builds/tests pass on GitHub runners. It will upload build artifacts to the workflow run, but it will not create a GitHub Release nor publish to PyPI because those steps only run on tag pushes (`refs/tags/v*`).
 
 ## What artifacts are produced?
 
@@ -72,7 +73,12 @@ On tag releases, the GitHub Release will include:
 
 - `dist/*.whl` (wheel)
 - `dist/*.tar.gz` (sdist)
-- `dist/*.mcpb` (experimental MCP bundle)
+- `release-assets/*.mcpb` (experimental MCP bundle)
+
+On workflow_dispatch dry runs, the workflow uploads artifacts to the run:
+
+- `pypi-dist/` (wheel + sdist only)
+- `release-assets/` (experimental `.mcpb`, `THIRD_PARTY_NOTICES.md`, SBOM)
 
 ## Troubleshooting
 
