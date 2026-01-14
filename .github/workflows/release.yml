@@ -225,22 +225,21 @@ jobs:
       - name: Derive version from tag
         id: version
         run: |
-          python - <<'PY'
-          import os
-          import re
-
-          tag = os.environ.get('GITHUB_REF_NAME', '')
-          m = re.match(r'^v(?P<ver>\d+\.\d+\.\d+(?:[a-zA-Z0-9\.\-]+)?)$', tag)
-          if not m:
-              raise SystemExit(f"Tag '{tag}' does not look like vX.Y.Z")
-
-          print(m.group('ver'))
-          PY
-          |
-          {
-            read -r VERSION
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          }
+          set -euo pipefail
+          ref="${GITHUB_REF_NAME:-}"
+          # Strip leading 'v' if present
+          if [ "${ref#v}" = "$ref" ]; then
+            echo "Tag '${ref}' does not start with 'v'" >&2
+            exit 1
+          fi
+          candidate="${ref#v}"
+          # Basic sanity check: must contain two dots
+          if [ "$(printf '%s' "$candidate" | awk -F. '{print NF-1}')" -lt 2 ]; then
+            echo "Tag '${ref}' does not look like vX.Y.Z" >&2
+            exit 1
+          fi
+          VERSION="$candidate"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Generate third-party notices
         run: uv run python scripts/generate_third_party_notices.py
