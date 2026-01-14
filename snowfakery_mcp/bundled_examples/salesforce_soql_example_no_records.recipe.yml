@@ -1,0 +1,10 @@
+- snowfakery_version: 3
+- plugin: snowfakery.standard_plugins.Salesforce.SalesforceQuery
+- object: Contact
+  fields:
+    FirstName: Keyser
+    LastName: Söze
+    AccountId:
+      SalesforceQuery.random_record:
+        from: Account
+        where: Name='Hungarian Mafia' # no such record

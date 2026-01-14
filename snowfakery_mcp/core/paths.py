@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import os
 import uuid
+from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True, slots=True)
@@ -11,7 +11,7 @@ class WorkspacePaths:
     root: Path
 
     @staticmethod
-    def detect() -> "WorkspacePaths":
+    def detect() -> WorkspacePaths:
         configured = os.environ.get("SNOWFAKERY_MCP_WORKSPACE_ROOT")
         root = Path(configured).expanduser().resolve() if configured else Path.cwd().resolve()
         return WorkspacePaths(root=root)
@@ -22,6 +22,17 @@ class WorkspacePaths:
             resolved.relative_to(self.root)
         except Exception as e:
             raise ValueError(f"Path is outside workspace root: {resolved}") from e
+        return resolved
+
+    def ensure_within(self, base_dir: Path, path: Path) -> Path:
+        """Resolve `path` and ensure it stays within `base_dir` (and the workspace root)."""
+
+        base_resolved = self.ensure_within_workspace(base_dir)
+        resolved = self.ensure_within_workspace(path)
+        try:
+            resolved.relative_to(base_resolved)
+        except Exception as e:
+            raise ValueError(f"Path is outside allowed directory: {resolved}") from e
         return resolved
 
     def runs_root(self) -> Path:

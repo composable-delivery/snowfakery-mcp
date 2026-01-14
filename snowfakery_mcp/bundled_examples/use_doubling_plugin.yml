@@ -1,0 +1,6 @@
+- snowfakery_version: 3
+- plugin: mypackage.DoublingPlugin
+- object: sixer
+  fields:
+    six:
+      DoublingPlugin.double: 3

@@ -5,12 +5,17 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -28,15 +33,32 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v5
         with:
           version: latest
 
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py${{ matrix.python-version }}-
+
       - name: Install deps
-        run: uv sync --all-groups
+        run: uv sync --all-groups --frozen
+
+      - name: Third-party notices (check)
+        run: uv run python scripts/generate_third_party_notices.py --check
 
       - name: Run tests
         run: uv run pytest
+
+      - name: Lint (ruff)
+        run: uv run ruff check snowfakery_mcp tests scripts evals
+
+      - name: Format check (ruff)
+        run: uv run ruff format --check snowfakery_mcp tests scripts evals
 
       - name: Typecheck
         run: uv run mypy snowfakery_mcp

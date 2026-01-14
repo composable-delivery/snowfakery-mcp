@@ -16,23 +16,24 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+import tomllib
 from pathlib import Path
+from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
 def _read_text(path: Path) -> str:
+    """Read UTF-8 text from disk."""
     return path.read_text(encoding="utf-8")
 
 
 def _project_root() -> Path:
+    """Return the repository root (one level above scripts/)."""
     return Path(__file__).resolve().parents[1]
 
 
 def _project_metadata() -> dict[str, str]:
-    # Parse pyproject.toml without extra deps (Python 3.11+).
-    import tomllib
-
+    """Extract minimal project metadata from pyproject.toml."""
     pyproject = _project_root() / "pyproject.toml"
     data = tomllib.loads(_read_text(pyproject))
     project = data.get("project", {})
@@ -43,6 +44,7 @@ def _project_metadata() -> dict[str, str]:
 
 
 def build_bundle(output_path: Path) -> None:
+    """Build a .mcpb ZIP bundle at the requested output path."""
     root = _project_root()
     meta = _project_metadata()
 
@@ -50,7 +52,7 @@ def build_bundle(output_path: Path) -> None:
     # Most MCP desktop clients can run an arbitrary command.
     recommended_command = "snowfakery-mcp"
 
-    manifest = {
+    manifest: dict[str, Any] = {
         "bundle_format": "experimental",
         "type": "mcp-server",
         "name": meta["name"],
@@ -70,7 +72,7 @@ def build_bundle(output_path: Path) -> None:
         },
     }
 
-    claude_desktop_config = {
+    claude_desktop_config: dict[str, Any] = {
         "mcpServers": {
             "snowfakery": {
                 "command": recommended_command,
@@ -84,7 +86,7 @@ def build_bundle(output_path: Path) -> None:
     }
 
     files_to_include: list[tuple[Path, str]] = []
-    for rel in ("README.md", "MCP_SERVER_SPEC.md"):
+    for rel in ("README.md", "MCP_SERVER_SPEC.md", "THIRD_PARTY_NOTICES.md"):
         p = root / rel
         if p.exists():
             files_to_include.append((p, rel))
@@ -101,6 +103,7 @@ def build_bundle(output_path: Path) -> None:
 
 
 def main() -> int:
+    """CLI entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output",

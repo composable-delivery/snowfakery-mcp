@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
-
 from snowfakery.__about__ import __version__ as snowfakery_version
 from snowfakery.api import file_extensions
 

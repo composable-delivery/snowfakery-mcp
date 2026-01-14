@@ -1,14 +1,10 @@
 [project]
 name = "snowfakery-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "mcp>=1.2.0",
-    "openai>=2.15.0",
-    "snowfakery>=4.2.1",
-]
+dependencies = ["mcp>=1.2.0", "openai>=2.15.0", "snowfakery>=4.2.1"]
 
 [dependency-groups]
 dev = [
@@ -16,6 +12,7 @@ dev = [
     "pytest>=9.0.2",
     "pytest-anyio>=0.0.0",
     "pytest-cov>=7.0.0",
+    "ruff>=0.14.11",
 ]
 evals = ["inspect-ai>=0.3.160"]
 
@@ -35,6 +32,27 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["snowfakery_mcp"]
+include = [
+    "snowfakery_mcp/schema/*.py",
+    "snowfakery_mcp/schema/*.json",
+    "snowfakery_mcp/bundled_docs/**/*.py",
+    "snowfakery_mcp/bundled_docs/**/*.md",
+    "snowfakery_mcp/bundled_examples/**/*.py",
+    "snowfakery_mcp/bundled_examples/**/*.yml",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "snowfakery_mcp/schema/*.py",
+    "snowfakery_mcp/schema/*.json",
+    "snowfakery_mcp/bundled_docs/**/*.py",
+    "snowfakery_mcp/bundled_docs/**/*.md",
+    "snowfakery_mcp/bundled_examples/**/*.py",
+    "snowfakery_mcp/bundled_examples/**/*.yml",
+    "README.md",
+    "MCP_SERVER_SPEC.md",
+    "RELEASE.md",
+]
 
 [tool.mypy]
 python_version = "3.12"
@@ -45,3 +63,19 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = ["mcp.*", "snowfakery.*"]
 ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["snowfakery_mcp", "tests", "scripts", "evals"]
+exclude = ["Snowfakery", "notebooks", ".venv", "dist", "logs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["snowfakery_mcp"]
+
+[tool.ruff.format]
+line-ending = "lf"

@@ -28,7 +28,7 @@ def create_app() -> FastMCP:
     register_capabilities_tools(app, config)
     register_example_tools(app, paths)
     register_doc_tools(app, paths)
-    register_validate_tool(app, paths)
+    register_validate_tool(app, paths, config)
     register_analyze_tool(app, paths)
     register_run_tool(app, paths, config)
     register_mapping_tool(app, paths, config)

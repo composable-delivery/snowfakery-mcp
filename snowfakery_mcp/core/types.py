@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, TypedDict
+from typing import Any, Literal, TypedDict
 
 
 class ErrorLocation(TypedDict, total=False):
@@ -11,8 +11,8 @@ class ErrorLocation(TypedDict, total=False):
 class ToolError(TypedDict):
     kind: str
     message: str
-    filename: Optional[str]
-    line: Optional[int]
+    filename: str | None
+    line: int | None
 
 
 class ValidateResult(TypedDict):

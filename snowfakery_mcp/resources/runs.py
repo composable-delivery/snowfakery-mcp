@@ -12,7 +12,7 @@ def register_run_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
     @mcp.resource("snowfakery://runs/{run_id}/{artifact}")
     def run_artifact_resource(run_id: str, artifact: str) -> str:
         run_dir = paths.ensure_within_workspace(paths.runs_root() / run_id)
-        path = paths.ensure_within_workspace(run_dir / artifact)
+        path = paths.ensure_within(run_dir, run_dir / artifact)
 
         if path.is_dir():
             entries = sorted(

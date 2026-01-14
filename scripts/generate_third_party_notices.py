@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Generate THIRD_PARTY_NOTICES.md.
+
+This repo bundles a snapshot of upstream Snowfakery docs/examples for installs where
+submodules are not present. Shipping third-party content generally requires clear
+attribution.
+
+This script generates:
+- THIRD_PARTY_NOTICES.md (repo root)
+- snowfakery_mcp/THIRD_PARTY_NOTICES.md (packaged with the wheel)
+
+Use:
+- Update files:  uv run python scripts/generate_third_party_notices.py
+- CI check:      uv run python scripts/generate_third_party_notices.py --check
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as _dt
+import subprocess
+import tomllib
+from pathlib import Path
+from typing import Any
+
+FALLBACK_BSD_3_CLAUSE_TEXT = """BSD 3-Clause License
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+
+def _project_root() -> Path:
+    """Return the repository root (one level above scripts/)."""
+    return Path(__file__).resolve().parents[1]
+
+
+def _read_toml_project_version(pyproject_path: Path) -> str | None:
+    """Read a PEP 621 version string from a pyproject.toml file."""
+    if not pyproject_path.exists():
+        return None
+
+    try:
+        data: dict[str, Any] = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError, ValueError):
+        return None
+
+    project = data.get("project")
+    if not isinstance(project, dict):
+        return None
+
+    version = project.get("version")
+    if isinstance(version, str) and version.strip():
+        return version.strip()
+    return None
+
+
+def _git_head(path: Path) -> str | None:
+    """Return the current git commit SHA for a repository path (or None)."""
+    try:
+        cp = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+    head = cp.stdout.strip()
+    return head or None
+
+
+def _snowfakery_upstream_info(root: Path) -> dict[str, str | None]:
+    sf_root = root / "Snowfakery"
+    if not sf_root.exists():
+        return {"version": None, "commit": None, "license_text": None}
+
+    version = _read_toml_project_version(sf_root / "pyproject.toml")
+    commit = _git_head(sf_root)
+    license_path = sf_root / "LICENSE"
+    license_text = license_path.read_text(encoding="utf-8") if license_path.exists() else None
+    return {"version": version, "commit": commit, "license_text": license_text}
+
+
+def generate_notices() -> str:
+    """Render the THIRD_PARTY_NOTICES.md contents."""
+    root = _project_root()
+    sf = _snowfakery_upstream_info(root)
+
+    today = _dt.date.today().isoformat()
+
+    sf_version_line = (
+        f"Upstream version: {sf['version']}" if sf["version"] else "Upstream version: (unknown)"
+    )
+    sf_commit_line = (
+        f"Upstream commit: {sf['commit']}" if sf["commit"] else "Upstream commit: (unknown)"
+    )
+
+    license_text = sf.get("license_text") or FALLBACK_BSD_3_CLAUSE_TEXT
+
+    return "\n".join(
+        [
+            "# Third-Party Notices",
+            "",
+            (
+                f"_Generated on {today} by `scripts/generate_third_party_notices.py`. "
+                "Do not edit manually._"
+            ),
+            "",
+            "This project distributes an MCP server under Apache-2.0 OR MIT.",
+            "Some *non-code* assets are bundled from third-party projects for convenience.",
+            "Runtime dependency licenses are best represented by the release SBOM; this file",
+            "covers bundled repository assets.",
+            "",
+            "## Snowfakery (SFDO-Tooling/Snowfakery)",
+            "",
+            "This distribution bundles a snapshot of Snowfakery documentation/examples/schema",
+            "to support installs where the `Snowfakery/` git submodule is not available.",
+            "",
+            "Bundled paths:",
+            "- `snowfakery_mcp/bundled_docs/`",
+            "- `snowfakery_mcp/bundled_examples/`",
+            "- `snowfakery_mcp/schema/snowfakery_recipe.jsonschema.json`",
+            "",
+            "Upstream project: https://github.com/SFDO-Tooling/Snowfakery",
+            sf_version_line,
+            sf_commit_line,
+            "",
+            "License: BSD 3-Clause License",
+            "",
+            "```text",
+            license_text.strip(),
+            "```",
+            "",
+        ]
+    )
+
+
+def _write_if_changed(path: Path, content: str) -> None:
+    """Write content only if it differs from what's on disk."""
+    existing = path.read_text(encoding="utf-8") if path.exists() else None
+    if existing == content:
+        return
+    path.write_text(content, encoding="utf-8")
+
+
+def _check_exact(path: Path, content: str) -> bool:
+    """Return True if the file exists and matches content exactly."""
+    if not path.exists():
+        return False
+    return path.read_text(encoding="utf-8") == content
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Fail if generated notices differ from committed files.",
+    )
+    args = parser.parse_args(argv)
+
+    root = _project_root()
+    content = generate_notices()
+
+    out_paths = [
+        root / "THIRD_PARTY_NOTICES.md",
+        root / "snowfakery_mcp" / "THIRD_PARTY_NOTICES.md",
+    ]
+
+    if args.check:
+        ok = all(_check_exact(p, content) for p in out_paths)
+        if not ok:
+            missing = [str(p) for p in out_paths if not _check_exact(p, content)]
+            print("THIRD_PARTY_NOTICES out of date:")
+            for p in missing:
+                print(f"- {p}")
+            print("Run: uv run python scripts/generate_third_party_notices.py")
+            return 1
+        return 0
+
+    for p in out_paths:
+        _write_if_changed(p, content)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

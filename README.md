@@ -3,6 +3,11 @@
 
 MCP server for authoring, analyzing, debugging, and running Snowfakery recipes.
 
+Upstream Snowfakery:
+
+- Repo: https://github.com/SFDO-Tooling/Snowfakery
+- Docs: https://snowfakery.readthedocs.io/
+
 
 See [MCP_SERVER_SPEC.md](MCP_SERVER_SPEC.md) for the initial server spec.
 
@@ -18,6 +23,20 @@ Install from releases / PyPI:
 - Recommended (isolated): `pipx install snowfakery-mcp`
 - Or: `python -m pip install snowfakery-mcp`
 - Then run: `snowfakery-mcp`
+
+## Development
+
+- Install all groups (dev + evals): `uv sync --all-groups`
+- Run tests: `uv run pytest`
+- Typecheck: `uv run mypy snowfakery_mcp`
+- Lint: `uv run ruff check snowfakery_mcp tests scripts evals`
+- Format: `uv run ruff format snowfakery_mcp tests scripts evals`
+
+Notes:
+
+- The repo includes the upstream Snowfakery repo as a git submodule under `Snowfakery/`.
+- The MCP server serves `snowfakery://docs/*` and `snowfakery://examples/*` from the submodule when present, but falls back to a bundled snapshot shipped inside the `snowfakery_mcp` wheel for installs where submodules are not available.
+- When running any Snowfakery-related commands locally, prefer `uv run ...` to ensure you’re using the pinned environment.
 
 ## What’s included (MVP)
 

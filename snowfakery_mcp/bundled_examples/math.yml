@@ -1,0 +1,7 @@
+- snowfakery_version: 3
+- plugin: snowfakery.standard_plugins.Math
+- object: OBJ
+  fields:
+    twelve:
+      Math.sqrt: ${{Math.min(144, 200)}}
+    pi: ${{Math.pi}}

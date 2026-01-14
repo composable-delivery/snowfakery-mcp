@@ -33,4 +33,6 @@ def test_recipe_text_from_input_requires_exactly_one(tmp_path: Path) -> None:
         recipe_text_from_input(recipe_path=None, recipe_text=None, workspace_root=tmp_path)
 
     with pytest.raises(ValueError):
-        recipe_text_from_input(recipe_path="x.yml", recipe_text="- object: X", workspace_root=tmp_path)
+        recipe_text_from_input(
+            recipe_path="x.yml", recipe_text="- object: X", workspace_root=tmp_path
+        )

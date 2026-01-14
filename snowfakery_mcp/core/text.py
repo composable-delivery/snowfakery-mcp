@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from importlib.resources.abc import Traversable
 from pathlib import Path
-from typing import Optional
 
 
-def read_text_utf8(path: Path) -> str:
+def read_text_utf8(path: Path | Traversable) -> str:
     return path.read_text(encoding="utf-8")
 
 
@@ -17,8 +16,8 @@ def truncate(text: str, *, max_chars: int) -> tuple[str, bool]:
 
 def recipe_text_from_input(
     *,
-    recipe_path: Optional[str],
-    recipe_text: Optional[str],
+    recipe_path: str | None,
+    recipe_text: str | None,
     workspace_root: Path,
 ) -> str:
     if bool(recipe_path) == bool(recipe_text):
@@ -28,7 +27,9 @@ def recipe_text_from_input(
         return recipe_text
 
     assert recipe_path is not None
-    path = (workspace_root / recipe_path) if not Path(recipe_path).is_absolute() else Path(recipe_path)
+    path = (
+        (workspace_root / recipe_path) if not Path(recipe_path).is_absolute() else Path(recipe_path)
+    )
     resolved = path.expanduser().resolve()
     try:
         resolved.relative_to(workspace_root)

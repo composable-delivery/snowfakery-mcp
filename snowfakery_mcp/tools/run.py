@@ -1,27 +1,26 @@
 from __future__ import annotations
 
 from io import StringIO
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
-
-from snowfakery.api import COUNT_REPS, generate_data, file_extensions
+from snowfakery.api import COUNT_REPS, file_extensions, generate_data
 from snowfakery.data_gen_exceptions import DataGenError
 
 from snowfakery_mcp.core.config import Config
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.snowfakery_app import MCPApplication
 from snowfakery_mcp.core.text import recipe_text_from_input, truncate
+from snowfakery_mcp.core.timeout import OperationTimeout, time_limit
 from snowfakery_mcp.core.types import RunResult, TargetNumber, ToolError
 
 
 def _safe_stopping_criteria(
     *,
     config: Config,
-    reps: Optional[int],
-    target_number: Optional[TargetNumber],
-) -> tuple[tuple[str, int] | None, Optional[int]]:
+    reps: int | None,
+    target_number: TargetNumber | None,
+) -> tuple[tuple[str, int] | None, int | None]:
     if reps is not None and target_number is not None:
         raise ValueError("Provide only one of reps or target_number")
 
@@ -51,12 +50,12 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
     @mcp.tool()
     def run_recipe(
         *,
-        recipe_path: Optional[str] = None,
-        recipe_text: Optional[str] = None,
-        options: Optional[dict[str, Any]] = None,
-        plugin_options: Optional[dict[str, Any]] = None,
-        reps: Optional[int] = None,
-        target_number: Optional[TargetNumber] = None,
+        recipe_path: str | None = None,
+        recipe_text: str | None = None,
+        options: dict[str, Any] | None = None,
+        plugin_options: dict[str, Any] | None = None,
+        reps: int | None = None,
+        target_number: TargetNumber | None = None,
         output_format: str = "txt",
         capture_output: bool = True,
         strict_mode: bool = True,
@@ -77,9 +76,11 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
         if fmt not in set(file_extensions):
             raise ValueError(f"Unsupported output_format: {output_format}")
 
-        target_tuple, _ = _safe_stopping_criteria(config=config, reps=reps, target_number=target_number)
+        target_tuple, _ = _safe_stopping_criteria(
+            config=config, reps=reps, target_number=target_number
+        )
 
-        out_buf: Optional[StringIO] = None
+        out_buf: StringIO | None = None
         if capture_output and fmt in {"txt", "json", "sql", "dot", "svg", "svgz"}:
             out_buf = StringIO()
 
@@ -91,31 +92,32 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
             output_files.append(out_buf)
         output_files.append(str(artifact_path))
 
-        output_folder: Optional[str] = None
+        output_folder: str | None = None
         if fmt == "csv":
             csv_dir = run_dir / "csv"
             csv_dir.mkdir(parents=True, exist_ok=True)
             output_folder = str(csv_dir)
             output_files = []
 
-        continuation_path: Optional[str] = None
+        continuation_path: str | None = None
         if generate_continuation:
             continuation_path = str(run_dir / "continuation.yml")
 
         try:
-            summary = generate_data(
-                StringIO(text),
-                parent_application=MCPApplication(),
-                user_options=dict(options or {}),
-                plugin_options=dict(plugin_options or {}),
-                target_number=target_tuple,
-                output_format=fmt,
-                output_files=output_files or None,
-                output_folder=output_folder,
-                strict_mode=strict_mode,
-                validate_only=validate_only,
-                generate_continuation_file=continuation_path,
-            )
+            with time_limit(config.timeout_seconds):
+                summary = generate_data(
+                    StringIO(text),
+                    parent_application=MCPApplication(),
+                    user_options=dict(options or {}),
+                    plugin_options=dict(plugin_options or {}),
+                    target_number=target_tuple,
+                    output_format=fmt,
+                    output_files=output_files or None,
+                    output_folder=output_folder,
+                    strict_mode=strict_mode,
+                    validate_only=validate_only,
+                    generate_continuation_file=continuation_path,
+                )
         except DataGenError as e:
             err: ToolError = {
                 "kind": type(e).__name__,
@@ -124,6 +126,19 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
                 "line": e.line_num,
             }
             return {"run_id": run_id, "ok": False, "error": err, "resources": []}
+        except OperationTimeout as e:
+            timeout_err: ToolError = {
+                "kind": type(e).__name__,
+                "message": str(e),
+                "filename": None,
+                "line": None,
+            }
+            return {
+                "run_id": run_id,
+                "ok": False,
+                "error": timeout_err,
+                "resources": [],
+            }
         except Exception as e:
             unexpected: ToolError = {
                 "kind": type(e).__name__,

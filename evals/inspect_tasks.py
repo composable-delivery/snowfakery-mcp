@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from mcp.client.session import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
-
-from inspect_ai import Task, eval as inspect_eval, task
+from inspect_ai import Task, task
+from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import Sample
 from inspect_ai.scorer import Score, Scorer, scorer
 from inspect_ai.solver import basic_agent, system_message, use_tools
 from inspect_ai.tool import mcp_server_stdio, mcp_tools
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 
 class SnowfakeryCase(NamedTuple):
@@ -55,7 +55,12 @@ CASES: list[SnowfakeryCase] = [
             "Then validate and run it, and submit the final recipe YAML."
         ),
         must_contain=["Person"],
-        must_call_tools=["list_examples", "get_example", "validate_recipe", "run_recipe"],
+        must_call_tools=[
+            "list_examples",
+            "get_example",
+            "validate_recipe",
+            "run_recipe",
+        ],
         must_output_substrings=["Person("],
     ),
     SnowfakeryCase(
@@ -177,9 +182,7 @@ def snowfakery_mcp_recipe_scorer() -> Scorer:
         case_meta = state.metadata or {}
         must_contain = [str(x) for x in (case_meta.get("must_contain") or [])]
         must_call_tools = [str(x) for x in (case_meta.get("must_call_tools") or [])]
-        must_output_substrings = [
-            str(x) for x in (case_meta.get("must_output_substrings") or [])
-        ]
+        must_output_substrings = [str(x) for x in (case_meta.get("must_output_substrings") or [])]
 
         completion = (state.output.completion if state.output is not None else "").strip()
         if not completion:
@@ -188,16 +191,17 @@ def snowfakery_mcp_recipe_scorer() -> Scorer:
         # Inspect records tool results as tool-role messages (ChatMessageTool.function).
         tool_messages = [m for m in state.messages if getattr(m, "role", None) == "tool"]
         tool_names = [
-            str(getattr(m, "function", ""))
-            for m in tool_messages
-            if getattr(m, "function", None)
+            str(getattr(m, "function", "")) for m in tool_messages if getattr(m, "function", None)
         ]
         missing_required_calls = [t for t in must_call_tools if t not in tool_names]
         if missing_required_calls:
             return Score(
                 value=False,
                 explanation=f"Missing required tool calls: {missing_required_calls}",
-                metadata={"missing_tool_calls": missing_required_calls, "tool_calls": tool_names},
+                metadata={
+                    "missing_tool_calls": missing_required_calls,
+                    "tool_calls": tool_names,
+                },
             )
 
         validate_payload = await _call_mcp_tool(
@@ -389,7 +393,8 @@ def _print_usage() -> None:
         "  uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-4o-mini"
     )
     print(
-        "  OPENAI_API_KEY=$GITHUB_TOKEN INSPECT_EVAL_MODEL_BASE_URL=https://models.inference.ai.azure.com \\")
+        "  OPENAI_API_KEY=$GITHUB_TOKEN INSPECT_EVAL_MODEL_BASE_URL=https://models.inference.ai.azure.com \\"
+    )
     print(
         "  uv run inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic --model openai/gpt-4o-mini"
     )
