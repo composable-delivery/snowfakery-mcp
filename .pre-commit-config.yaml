@@ -6,10 +6,10 @@ repos:
         entry: uv run ruff format
         language: system
         types: [python]
-        stages: [commit]
+        stages: [pre-commit]
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix
         language: system
         types: [python]
-        stages: [commit]
+        stages: [pre-commit]
