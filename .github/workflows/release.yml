@@ -341,6 +341,7 @@ jobs:
     needs: build
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     timeout-minutes: 20
+    environment: pypi
 
     permissions:
       id-token: write
