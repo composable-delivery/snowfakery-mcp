@@ -100,7 +100,7 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest -v --tb=short
+        run: uv run pytest -v --tb=short --ignore=Snowfakery
 
       - name: Generate test summary
         if: always()

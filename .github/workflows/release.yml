@@ -68,7 +68,7 @@ jobs:
 
       - name: Run tests
         if: inputs.run_tests
-        run: uv run pytest
+        run: uv run pytest --ignore=Snowfakery
 
       - name: Generate third-party notices
         run: uv run python scripts/generate_third_party_notices.py
@@ -220,7 +220,7 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest --ignore=Snowfakery
 
       - name: Derive version from tag
         id: version
