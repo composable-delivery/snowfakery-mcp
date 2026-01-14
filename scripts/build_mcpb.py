@@ -145,7 +145,7 @@ For more details, see the [README](https://github.com/composable-delivery/snowfa
         "long_description": long_description,
         "author": {
             "name": "Composable Delivery",
-            "url": "https://github.com/composable-delivery/snowfakery-mcp",
+            "url": "https://github.com/composable-delivery",
         },
         "repository": {
             "type": "git",
@@ -188,22 +188,22 @@ For more details, see the [README](https://github.com/composable-delivery/snowfa
             files_to_include.append((p, rel))
 
     # Create a stub main.py entry point that references the installed package
-    stub_main_py = '''#!/usr/bin/env python3
-"""Stub entry point for Snowfakery MCP Server.
+    stub_main_py = f'''#!/usr/bin/env python3
+"""Stub entry point for {meta["name"]} MCP Server.
 
-This MCPB bundle requires the snowfakery-mcp package to be installed separately.
-Please install it using: pipx install snowfakery-mcp
+This MCPB bundle requires the {meta["name"]} package to be installed separately.
+Please install it using: {recommended_install}
 
-After installation, configure Claude Desktop to use the 'snowfakery-mcp' command.
+After installation, configure Claude Desktop to use the '{recommended_command}' command.
 """
 import sys
 
 if __name__ == "__main__":
     print(
-        "This is a stub entry point. The snowfakery-mcp package must be installed separately.",
+        "This is a stub entry point. The {meta["name"]} package must be installed separately.",
         file=sys.stderr,
     )
-    print("Install it using: pipx install snowfakery-mcp", file=sys.stderr)
+    print("Install it using: {recommended_install}", file=sys.stderr)
     sys.exit(1)
 '''
 
