@@ -27,6 +27,7 @@ from snowfakery_mcp.core.text import read_text_utf8
 
 def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
     """Register read-only resources like schema, docs, and bundled examples."""
+
     @mcp.resource("snowfakery://schema/recipe-jsonschema")
     def recipe_schema_resource() -> str:
         # Prefer the Snowfakery submodule if present (dev mode), but fall back
