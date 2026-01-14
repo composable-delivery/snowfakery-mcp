@@ -21,16 +21,16 @@ def _short(s: str, n: int = 160) -> str:
 
 
 def summarize(path: Path) -> int:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data: Any = json.loads(path.read_text(encoding="utf-8"))
 
-    eval_meta = data.get("eval", {}) if isinstance(data, dict) else {}
-    model = _get(eval_meta, "model", "")
-    task = _get(eval_meta, "task", "")
-    created = _get(eval_meta, "created", "")
-    base_url = _get(eval_meta, "model_base_url", "")
+    eval_meta: dict[str, Any] = data.get("eval", {}) if isinstance(data, dict) else {}
+    model: str = _get(eval_meta, "model", "")
+    task: str = _get(eval_meta, "task", "")
+    created: str = _get(eval_meta, "created", "")
+    base_url: str = _get(eval_meta, "model_base_url", "")
 
-    stats = data.get("stats", {}) if isinstance(data, dict) else {}
-    usage = _get(stats, f"model_usage.{model}", {})
+    stats: dict[str, Any] = data.get("stats", {}) if isinstance(data, dict) else {}
+    usage: dict[str, Any] = _get(stats, f"model_usage.{model}", {})
 
     print(f"log: {path}")
     print(f"task: {task}")
@@ -41,12 +41,12 @@ def summarize(path: Path) -> int:
         print(f"created: {created}")
 
     if isinstance(usage, dict) and usage:
-        itok = usage.get("input_tokens")
-        otok = usage.get("output_tokens")
-        ttok = usage.get("total_tokens")
+        itok: Any = usage.get("input_tokens")
+        otok: Any = usage.get("output_tokens")
+        ttok: Any = usage.get("total_tokens")
         print(f"tokens: input={itok} output={otok} total={ttok}")
 
-    samples = data.get("samples", []) if isinstance(data, dict) else []
+    samples: list[Any] = data.get("samples", []) if isinstance(data, dict) else []
     if not isinstance(samples, list):
         samples = []
 
@@ -57,25 +57,31 @@ def summarize(path: Path) -> int:
         if not isinstance(sample, dict):
             continue
 
-        sid = sample.get("id", "")
-        output = sample.get("output", {}) if isinstance(sample.get("output"), dict) else {}
-        completion = str(output.get("completion", ""))
+        sid: str = sample.get("id", "")
+        output: dict[str, Any] = (
+            sample.get("output", {}) if isinstance(sample.get("output"), dict) else {}
+        )
+        completion: str = str(output.get("completion", ""))
 
-        scores = sample.get("scores", {}) if isinstance(sample.get("scores"), dict) else {}
-        scorer = scores.get("snowfakery_mcp_recipe")
-        score_value = None
-        score_expl = ""
+        scores: dict[str, Any] = (
+            sample.get("scores", {}) if isinstance(sample.get("scores"), dict) else {}
+        )
+        scorer: Any = scores.get("snowfakery_mcp_recipe")
+        score_value: Any = None
+        score_expl: str = ""
         if isinstance(scorer, dict):
             score_value = scorer.get("value")
             score_expl = str(scorer.get("explanation", ""))
 
-        messages = sample.get("messages", []) if isinstance(sample.get("messages"), list) else []
+        messages: list[Any] = (
+            sample.get("messages", []) if isinstance(sample.get("messages"), list) else []
+        )
         tool_calls: list[str] = []
         for m in messages:
             if not isinstance(m, dict):
                 continue
             if m.get("role") == "tool":
-                fn = m.get("function")
+                fn: Any = m.get("function")
                 if isinstance(fn, str) and fn:
                     tool_calls.append(fn)
 

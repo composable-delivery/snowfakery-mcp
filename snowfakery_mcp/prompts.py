@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import textwrap
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 
 def register_prompts(mcp: FastMCP) -> None:
-    @mcp.prompt()
+    @mcp.prompt(tags={"authoring"})
     def author_recipe(goal: str) -> str:
+        """Create a new Snowfakery recipe from a description of what data to generate."""
         return textwrap.dedent(
             f"""
             You are authoring a Snowfakery recipe.
@@ -27,8 +28,9 @@ def register_prompts(mcp: FastMCP) -> None:
             """
         ).strip()
 
-    @mcp.prompt()
+    @mcp.prompt(tags={"debugging"})
     def debug_recipe(recipe_yaml: str, error: str) -> str:
+        """Debug and fix a failing Snowfakery recipe given the error output."""
         return textwrap.dedent(
             f"""
             Debug this Snowfakery recipe.

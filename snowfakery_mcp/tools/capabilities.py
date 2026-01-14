@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from snowfakery.__about__ import __version__ as snowfakery_version
 from snowfakery.api import file_extensions
 
@@ -10,9 +10,16 @@ from snowfakery_mcp.core.config import Config
 
 
 def register_capabilities_tools(mcp: FastMCP, config: Config) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"discovery", "info"})
     def list_capabilities() -> dict[str, Any]:
-        """Return Snowfakery + server capability info."""
+        """Return Snowfakery + server capability info.
+
+        Use this tool first to understand what the server can do, including:
+        - Snowfakery version
+        - Supported output formats
+        - Server limits (timeout, max output, max reps)
+        - Available resources
+        """
 
         return {
             "snowfakery_version": snowfakery_version,

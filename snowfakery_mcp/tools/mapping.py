@@ -4,7 +4,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from snowfakery.api import COUNT_REPS, generate_data
 from snowfakery.data_gen_exceptions import DataGenError
 
@@ -17,14 +17,22 @@ from snowfakery_mcp.core.types import ToolError
 
 
 def register_mapping_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"execution", "salesforce"})
     def generate_mapping(
-        *,
         recipe_path: str | None = None,
         recipe_text: str | None = None,
         load_declarations_paths: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Generate a CumulusCI mapping.yml for a recipe and return a preview plus run artifact URI."""
+        """Generate a CumulusCI mapping.yml file from a Snowfakery recipe.
+
+        Creates the mapping file needed to load Snowfakery-generated data into
+        Salesforce using CumulusCI. Returns a preview and artifact URI.
+
+        Args:
+            recipe_path: Path to recipe file (relative to workspace)
+            recipe_text: Recipe YAML content as string
+            load_declarations_paths: Optional paths to load declaration files
+        """
 
         text = recipe_text_from_input(
             recipe_path=recipe_path,
@@ -46,17 +54,18 @@ def register_mapping_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -
             ]
 
             with time_limit(config.timeout_seconds):
-                generate_data(
-                    StringIO(text),
-                    parent_application=MCPApplication(),
-                    target_number=(COUNT_REPS, 1),
-                    output_format="txt",
-                    output_files=[StringIO()],
-                    generate_cci_mapping_file=str(mapping_path),
-                    load_declarations=declarations or None,
-                    strict_mode=True,
-                    validate_only=False,
-                )
+                kwargs: dict[str, Any] = {
+                    "parent_application": MCPApplication(),
+                    "target_number": (COUNT_REPS, 1),
+                    "output_format": "txt",
+                    "output_files": [StringIO()],
+                    "generate_cci_mapping_file": str(mapping_path),
+                    "strict_mode": True,
+                    "validate_only": False,
+                }
+                if declarations:
+                    kwargs["load_declarations"] = declarations
+                generate_data(StringIO(text), **kwargs)
         except DataGenError as e:
             err: ToolError = {
                 "kind": type(e).__name__,
@@ -78,7 +87,7 @@ def register_mapping_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -
                 "error": timeout_err,
                 "resources": [],
             }
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError) as e:
             unexpected: ToolError = {
                 "kind": type(e).__name__,
                 "message": str(e),

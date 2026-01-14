@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from snowfakery_mcp.prompts import register_prompts
+
+if TYPE_CHECKING:
+    pass
 
 
 class TestPromptsRegistration:
@@ -12,7 +17,7 @@ class TestPromptsRegistration:
         """Test that register_prompts can be called (registers decorators)."""
         from unittest.mock import MagicMock
 
-        mcp_mock = MagicMock()
+        mcp_mock: Any = MagicMock()
 
         # Should not raise
         try:

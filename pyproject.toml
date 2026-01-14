@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["mcp>=1.2.0", "openai>=2.15.0", "snowfakery>=4.2.1"]
+dependencies = ["fastmcp>=2.14.3", "openai>=2.15.0", "snowfakery>=4.2.1"]
 
 [dependency-groups]
 dev = [
@@ -98,7 +98,7 @@ warn_unused_configs = true
 
 # External libraries may not ship full typing.
 [[tool.mypy.overrides]]
-module = ["mcp.*", "snowfakery.*"]
+module = ["fastmcp.*", "snowfakery.*"]
 ignore_missing_imports = true
 
 [tool.ruff]

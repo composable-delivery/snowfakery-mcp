@@ -47,29 +47,29 @@ class TestConfigFromEnv:
             assert config.max_target_count == 1000
 
     def test_values_below_min_clamped(self) -> None:
-        """Test that values below minimum are clamped to default."""
+        """Test that values below minimum are clamped to min_value."""
         env = {
             "SNOWFAKERY_MCP_MAX_REPS": "0",
         }
         with patch.dict("os.environ", env, clear=False):
             config = Config.from_env()
-            # Values below min_value should use default
-            assert config.max_reps == 10
+            # Values below min_value are clamped to min_value (1)
+            assert config.max_reps == 1
 
     def test_values_above_max_clamped(self) -> None:
-        """Test that values above maximum use default."""
+        """Test that values above maximum are clamped to max_value."""
         env = {
             "SNOWFAKERY_MCP_MAX_REPS": "200000",  # exceeds max of 100_000
         }
         with patch.dict("os.environ", env, clear=False):
             config = Config.from_env()
-            # Values above max should use default
-            assert config.max_reps == 10
+            # Values above max are clamped to max_value
+            assert config.max_reps == 100_000
 
     def test_timeout_below_min(self) -> None:
-        """Test timeout below minimum uses default."""
+        """Test timeout below minimum is clamped to min_value."""
         env = {"SNOWFAKERY_MCP_TIMEOUT_SECONDS": "-1"}
         with patch.dict("os.environ", env, clear=False):
             config = Config.from_env()
-            # Should use default
-            assert config.timeout_seconds == 30
+            # Clamped to min_value of 1
+            assert config.timeout_seconds == 1

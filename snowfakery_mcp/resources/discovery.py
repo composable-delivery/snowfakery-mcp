@@ -12,7 +12,7 @@ import json
 from typing import Any
 
 from faker import Faker
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 
 def register_discovery_resources(mcp: FastMCP) -> None:
@@ -30,7 +30,8 @@ def register_discovery_resources(mcp: FastMCP) -> None:
         providers_info: dict[str, list[dict[str, str]]] = {}
 
         # Get all providers from Faker
-        for provider_class in fake.providers:
+        for provider_instance in fake.providers:
+            provider_class = provider_instance.__class__
             provider_module = provider_class.__module__
             provider_name = provider_class.__name__
 

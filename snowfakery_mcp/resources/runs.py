@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.text import read_text_utf8

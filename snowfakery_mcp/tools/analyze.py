@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import StringIO
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from snowfakery.parse_recipe_yaml import parse_recipe
 
 from snowfakery_mcp.core.paths import WorkspacePaths
@@ -11,13 +11,21 @@ from snowfakery_mcp.core.text import recipe_text_from_input
 
 
 def register_analyze_tool(mcp: FastMCP, paths: WorkspacePaths) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"authoring", "analysis"})
     def analyze_recipe(
-        *,
         recipe_path: str | None = None,
         recipe_text: str | None = None,
     ) -> dict[str, Any]:
-        """Parse a recipe and return a structural summary (tables, fields, options, plugins)."""
+        """Parse and analyze a Snowfakery recipe structure.
+
+        Returns structural information about the recipe including:
+        - Tables and their fields
+        - Declared plugins and options
+        - Random reference usage
+        - Recipe version
+
+        Use this before running to understand recipe structure.
+        """
 
         text = recipe_text_from_input(
             recipe_path=recipe_path,

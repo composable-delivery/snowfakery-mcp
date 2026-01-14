@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from mcp.client.session import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
+from fastmcp import Client
+
+from snowfakery_mcp.server import mcp as server_app
+
+if TYPE_CHECKING:
+    pass
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -38,43 +42,48 @@ def pytest_configure(config: pytest.Config) -> None:
         config.option.cov_report = ["term-missing"]
 
 
-def _resource_text(result: Any) -> str:
-    """Extract text content from an MCP resource response."""
-    contents = getattr(result, "contents", None)
-    assert isinstance(contents, list) and contents, "Expected non-empty resource contents"
-    first = cast(Any, contents[0])
-    text = getattr(first, "text", None)
-    assert isinstance(text, str), "Expected text resource contents"
-    return text
+def _resource_text(result: list[Any] | Any) -> str:
+    """Extract text content from a FastMCP resource response."""
+    # FastMCP returns resource content in a structured format
+    if isinstance(result, list) and result:
+        first: Any = result[0]
+        if hasattr(first, "text"):
+            return str(first.text)
+        if isinstance(first, str):
+            return first
+    if hasattr(result, "text"):
+        return str(result.text)
+    if isinstance(result, str):
+        return result
+    raise AssertionError(f"Expected text resource contents, got {type(result)}")
 
 
-def _tool_payload_text(result: Any) -> str:
-    """Extract text content from an MCP tool result."""
-    content = getattr(result, "content", None)
-    assert isinstance(content, list) and content, "Expected non-empty tool result"
-    first = cast(Any, content[0])
-    text = getattr(first, "text", None)
-    assert isinstance(text, str), "Expected text tool result"
-    return text
+def _tool_result_text(result: Any) -> str:
+    """Extract text content from a FastMCP tool result."""
+    # FastMCP tool results have a .data attribute with the actual content
+    if hasattr(result, "data"):
+        data: Any = result.data
+        if isinstance(data, str):
+            return data
+        if isinstance(data, list) and data:
+            first = data[0]
+            if hasattr(first, "text"):
+                return str(first.text)
+            if isinstance(first, str):
+                return first
+        return str(data)
+    if isinstance(result, str):
+        return result
+    raise AssertionError(f"Expected tool result with text, got {type(result)}")
 
 
 @pytest.fixture
-async def mcp_session() -> AsyncIterator[ClientSession]:
-    """Create an MCP session connected to the Snowfakery MCP server."""
-    repo_root = Path(__file__).resolve().parents[1]
-    params = StdioServerParameters(
-        command="uv",
-        args=["run", "snowfakery-mcp"],
-        cwd=str(repo_root),
-        env={
-            "SNOWFAKERY_MCP_WORKSPACE_ROOT": str(repo_root),
-            "SNOWFAKERY_MCP_MAX_REPS": "5",
-            "SNOWFAKERY_MCP_MAX_TARGET_COUNT": "50",
-            "SNOWFAKERY_MCP_MAX_CAPTURE_CHARS": "5000",
-        },
-    )
+async def mcp_client() -> AsyncIterator[Client[Any]]:
+    """Create a FastMCP client connected to the Snowfakery MCP server (in-memory).
 
-    async with stdio_client(params) as (read_stream, write_stream):
-        async with ClientSession(read_stream, write_stream) as session:
-            await session.initialize()
-            yield session
+    This uses FastMCP's in-memory transport for fast, reliable testing
+    without spawning subprocesses.
+    """
+    client: Client[Any] = Client(server_app)
+    async with client:
+        yield client

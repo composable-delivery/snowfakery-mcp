@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import StringIO
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from snowfakery.api import COUNT_REPS, file_extensions, generate_data
 from snowfakery.data_gen_exceptions import DataGenError
 
@@ -16,7 +16,6 @@ from snowfakery_mcp.core.types import RunResult, TargetNumber, ToolError
 
 
 def _safe_stopping_criteria(
-    *,
     config: Config,
     reps: int | None,
     target_number: TargetNumber | None,
@@ -32,7 +31,7 @@ def _safe_stopping_criteria(
             raise ValueError("reps must be >= 1")
         if reps > config.max_reps:
             raise ValueError(f"reps exceeds server limit ({config.max_reps})")
-        return (COUNT_REPS, int(reps)), int(reps)
+        return (COUNT_REPS, reps), reps
 
     assert target_number is not None
     table = target_number.get("table")
@@ -43,13 +42,12 @@ def _safe_stopping_criteria(
         raise ValueError("target_number.count must be an int >= 1")
     if count > config.max_target_count:
         raise ValueError(f"target_number.count exceeds server limit ({config.max_target_count})")
-    return (table, int(count)), None
+    return (table, count), None
 
 
 def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"execution", "generation"})
     def run_recipe(
-        *,
         recipe_path: str | None = None,
         recipe_text: str | None = None,
         options: dict[str, Any] | None = None,
@@ -62,7 +60,23 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
         validate_only: bool = False,
         generate_continuation: bool = False,
     ) -> RunResult:
-        """Run a Snowfakery recipe (or validate-only) and return captured output plus run artifacts."""
+        """Run a Snowfakery recipe and generate fake data.
+
+        Executes the recipe and returns generated output along with artifact URIs.
+
+        Args:
+            recipe_path: Path to recipe file (relative to workspace)
+            recipe_text: Recipe YAML content as string
+            options: User options (--option key=value equivalent)
+            plugin_options: Plugin configuration options
+            reps: Number of times to repeat the recipe
+            target_number: Generate until table reaches count {"table": "X", "count": N}
+            output_format: Output format (txt, json, csv, sql, dot, svg, etc.)
+            capture_output: Include output text in response
+            strict_mode: Fail on undefined field references
+            validate_only: Only validate, don't generate
+            generate_continuation: Create continuation file for resuming
+        """
 
         text = recipe_text_from_input(
             recipe_path=recipe_path,
@@ -105,19 +119,24 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
 
         try:
             with time_limit(config.timeout_seconds):
-                summary = generate_data(
-                    StringIO(text),
-                    parent_application=MCPApplication(),
-                    user_options=dict(options or {}),
-                    plugin_options=dict(plugin_options or {}),
-                    target_number=target_tuple,
-                    output_format=fmt,
-                    output_files=output_files or None,
-                    output_folder=output_folder,
-                    strict_mode=strict_mode,
-                    validate_only=validate_only,
-                    generate_continuation_file=continuation_path,
-                )
+                kwargs: dict[str, Any] = {
+                    "parent_application": MCPApplication(),
+                    "user_options": dict(options or {}),
+                    "plugin_options": dict(plugin_options or {}),
+                    "output_format": fmt,
+                    "strict_mode": strict_mode,
+                    "validate_only": validate_only,
+                }
+                if target_tuple is not None:
+                    kwargs["target_number"] = target_tuple
+                if output_files:
+                    kwargs["output_files"] = output_files
+                if output_folder is not None:
+                    kwargs["output_folder"] = output_folder
+                if continuation_path is not None:
+                    kwargs["generate_continuation_file"] = continuation_path
+
+                summary = generate_data(StringIO(text), **kwargs)
         except DataGenError as e:
             err: ToolError = {
                 "kind": type(e).__name__,
@@ -139,7 +158,7 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
                 "error": timeout_err,
                 "resources": [],
             }
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError) as e:
             unexpected: ToolError = {
                 "kind": type(e).__name__,
                 "message": str(e),

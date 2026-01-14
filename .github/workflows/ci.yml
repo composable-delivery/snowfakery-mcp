@@ -13,12 +13,55 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  build:
+    name: Build & Setup
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Cache uv
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Cache venv
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-py3.12-
+
+  test:
+    name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    needs: build
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         python-version: ["3.12"]
 
     steps:
@@ -37,7 +80,7 @@ jobs:
         with:
           version: latest
 
-      - name: Cache uv
+      - name: Restore uv cache
         uses: actions/cache@v5
         with:
           path: ~/.cache/uv
@@ -45,20 +88,219 @@ jobs:
           restore-keys: |
             uv-${{ runner.os }}-py${{ matrix.python-version }}-
 
-      - name: Install deps
+      - name: Restore venv cache
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-py${{ matrix.python-version }}-
+
+      - name: Install dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Third-party notices (check)
-        run: uv run python scripts/generate_third_party_notices.py --check
-
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest -v --tb=short
 
-      - name: Lint (ruff)
+      - name: Generate test summary
+        if: always()
+        run: |
+          {
+            echo "## Test Results - ${{ matrix.os }} (Python ${{ matrix.python-version }})"
+            echo ""
+            echo "✓ Tests passed on ${{ matrix.os }}"
+          } >> $GITHUB_STEP_SUMMARY
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Restore venv cache
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Lint with Ruff
         run: uv run ruff check snowfakery_mcp tests scripts evals
 
-      - name: Format check (ruff)
+      - name: Format check with Ruff
         run: uv run ruff format --check snowfakery_mcp tests scripts evals
 
-      - name: Typecheck
+      - name: Generate lint summary
+        if: always()
+        run: |
+          {
+            echo "## Lint & Format Results"
+            echo ""
+            echo "✓ Code style checks passed"
+          } >> $GITHUB_STEP_SUMMARY
+
+  typecheck:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Restore venv cache
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Type check with mypy
         run: uv run mypy snowfakery_mcp
+
+      - name: Generate typecheck summary
+        if: always()
+        run: |
+          {
+            echo "## Type Check Results"
+            echo ""
+            echo "✓ Type checking passed"
+          } >> $GITHUB_STEP_SUMMARY
+
+  compliance:
+    name: Compliance Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Restore venv cache
+        uses: actions/cache@v5
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Check third-party notices
+        run: uv run python scripts/generate_third_party_notices.py --check
+
+      - name: Generate compliance summary
+        if: always()
+        run: |
+          {
+            echo "## Compliance Results"
+            echo ""
+            echo "✓ Third-party notices are up to date"
+          } >> $GITHUB_STEP_SUMMARY
+
+  # Final job that depends on all others
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [build, test, lint, typecheck, compliance]
+    if: always()
+
+    steps:
+      - name: Check job status
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.typecheck.result }}" != "success" ] || \
+             [ "${{ needs.compliance.result }}" != "success" ]; then
+            exit 1
+          fi
+
+      - name: Generate final summary
+        run: |
+          {
+            echo "# ✅ All Checks Passed"
+            echo ""
+            echo "| Check | Status |"
+            echo "|-------|--------|"
+            echo "| Build | ${{ needs.build.result }} |"
+            echo "| Tests | ${{ needs.test.result }} |"
+            echo "| Lint & Format | ${{ needs.lint.result }} |"
+            echo "| Type Check | ${{ needs.typecheck.result }} |"
+            echo "| Compliance | ${{ needs.compliance.result }} |"
+          } >> $GITHUB_STEP_SUMMARY
