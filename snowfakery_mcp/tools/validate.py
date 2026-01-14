@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import StringIO
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from snowfakery.api import generate_data
 from snowfakery.data_gen_exceptions import DataGenError
 
@@ -16,9 +16,8 @@ from snowfakery_mcp.core.types import ToolError, ValidateResult
 
 
 def register_validate_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"authoring", "validation"})
     def validate_recipe(
-        *,
         recipe_path: str | None = None,
         recipe_text: str | None = None,
         strict_mode: bool = True,
@@ -26,9 +25,18 @@ def register_validate_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) 
         options: dict[str, Any] | None = None,
         plugin_options: dict[str, Any] | None = None,
     ) -> ValidateResult:
-        """Validate a recipe using Snowfakery's validate-only mode.
+        """Validate a Snowfakery recipe without generating data.
 
-        Note: schema_validate is reserved for adding JSON-schema validation later.
+        Checks recipe syntax and structure. Returns validation errors if any.
+        Use either recipe_path (file on disk) or recipe_text (inline YAML).
+
+        Args:
+            recipe_path: Path to a recipe file (relative to workspace root)
+            recipe_text: Recipe YAML content as a string
+            strict_mode: If True, fail on undefined field references
+            schema_validate: Reserved for future JSON schema validation
+            options: User options to pass to the recipe
+            plugin_options: Plugin-specific options
         """
 
         _ = schema_validate
@@ -67,7 +75,7 @@ def register_validate_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) 
                 "line": None,
             }
             return {"valid": False, "errors": [timeout_err]}
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError) as e:
             # Snowfakery can raise non-DataGenError exceptions for some invalid inputs.
             unexpected: ToolError = {
                 "kind": type(e).__name__,

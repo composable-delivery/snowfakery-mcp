@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["mcp>=1.2.0", "openai>=2.15.0", "snowfakery>=4.2.1"]
+dependencies = ["fastmcp>=2.14.3", "openai>=2.15.0", "snowfakery>=4.2.1"]
 
 [dependency-groups]
 dev = [
@@ -17,8 +17,39 @@ dev = [
 evals = ["inspect-ai>=0.3.160"]
 
 [tool.pytest.ini_options]
-addopts = "-q"
 testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+markers = [
+    "anyio: async integration tests",
+    "integration: integration tests",
+    "unit: unit tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["snowfakery_mcp"]
+omit = ["snowfakery_mcp/__main__.py", "snowfakery_mcp/bundled_*/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 75
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [project.scripts]
 snowfakery-mcp = "snowfakery_mcp.server:run"
@@ -64,10 +95,11 @@ include = [
 python_version = "3.12"
 strict = true
 warn_unused_configs = true
+exclude = ["evals/"]
 
 # External libraries may not ship full typing.
 [[tool.mypy.overrides]]
-module = ["mcp.*", "snowfakery.*"]
+module = ["fastmcp.*", "snowfakery.*"]
 ignore_missing_imports = true
 
 [tool.ruff]

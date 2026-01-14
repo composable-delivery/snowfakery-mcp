@@ -4,7 +4,7 @@ import re
 from importlib import resources
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from snowfakery_mcp.core.assets import docs_root, iter_files
 from snowfakery_mcp.core.paths import WorkspacePaths
@@ -12,9 +12,13 @@ from snowfakery_mcp.core.text import read_text_utf8
 
 
 def register_doc_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
-    @mcp.tool()
+    @mcp.tool(tags={"discovery", "schema"})
     def get_schema() -> dict[str, Any]:
-        """Return the Snowfakery recipe JSON schema used for authoring/validation."""
+        """Return the Snowfakery recipe JSON schema.
+
+        Use this schema to understand the structure of valid recipes
+        and for validation purposes.
+        """
 
         schema_path = paths.root / "Snowfakery" / "schema" / "snowfakery_recipe.jsonschema.json"
         if schema_path.exists():
@@ -28,9 +32,13 @@ def register_doc_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
 
         return {"uri": "snowfakery://schema/recipe-jsonschema", "schema": schema_text}
 
-    @mcp.tool()
+    @mcp.tool(tags={"discovery", "docs"})
     def search_docs(query: str, limit: int = 20) -> dict[str, Any]:
-        """Search Snowfakery markdown docs for a query string and return matching lines."""
+        """Search Snowfakery documentation for a query string.
+
+        Returns matching lines from the markdown documentation.
+        Useful for finding specific syntax, features, or examples.
+        """
 
         if not query.strip():
             raise ValueError("query must be non-empty")

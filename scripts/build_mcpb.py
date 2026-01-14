@@ -118,7 +118,7 @@ After installation, the `snowfakery-mcp` command will be available in your PATH.
 
 ## Configuration
 
-Add this server to your Claude Desktop configuration:
+Add this server to your Claude Desktop configuration in `~/.config/Claude/claude.json`:
 
 ```json
 {{
@@ -137,6 +137,9 @@ Add this server to your Claude Desktop configuration:
 For more details, see the [README](https://github.com/composable-delivery/snowfakery-mcp#readme).
 """
 
+    # Complete manifest.json structure for .mcpb bundles
+    # NOTE: The "server" section is NOT part of the official spec
+    # Claude Desktop reads configuration from its own claude.json file, not from the .mcpb manifest
     manifest: dict[str, Any] = {
         "manifest_version": "0.3",
         "name": meta["name"],
@@ -151,21 +154,16 @@ For more details, see the [README](https://github.com/composable-delivery/snowfa
             "type": "git",
             "url": "https://github.com/composable-delivery/snowfakery-mcp.git",
         },
-        "homepage": "https://github.com/composable-delivery/snowfakery-mcp",
-        "documentation": "https://github.com/composable-delivery/snowfakery-mcp#readme",
-        "support": "https://github.com/composable-delivery/snowfakery-mcp/issues",
+        "support": "https://github.com/composable-delivery/snowfakery-mcp/discussions",
         "license": "MIT OR Apache-2.0",
-        "server": {
-            "type": "python",
-            "entry_point": "main.py",
-            "mcp_config": {
-                "command": recommended_command,
-                "args": [],
-                "env": {
-                    "SNOWFAKERY_MCP_WORKSPACE_ROOT": "${workspaceRoot}",
-                },
-            },
-        },
+        "keywords": [
+            "snowfakery",
+            "data-generation",
+            "testing",
+            "mcp",
+            "claude",
+            "recipes",
+        ],
     }
 
     claude_desktop_config: dict[str, Any] = {

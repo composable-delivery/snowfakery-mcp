@@ -25,7 +25,7 @@ def time_limit(seconds: int) -> Iterator[None]:
         yield
         return
 
-    def _handle(_signum: int, _frame) -> None:  # type: ignore[no-untyped-def]
+    def _handle(_signum: int, _frame: object) -> None:
         raise OperationTimeout(f"Operation exceeded {seconds}s")
 
     old_handler = signal.getsignal(signal.SIGALRM)

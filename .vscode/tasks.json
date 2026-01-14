@@ -1,0 +1,158 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Install dependencies (uv)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "sync"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Format with Ruff",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "ruff",
+                "format",
+                "snowfakery_mcp",
+                "tests",
+                "scripts",
+                "evals"
+            ],
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Lint with Ruff",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "ruff",
+                "check",
+                "snowfakery_mcp",
+                "tests",
+                "scripts",
+                "evals"
+            ],
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+): ([A-Z]\\d{3}) (.*)$",
+                    "file": 1,
+                    "location": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "group": "build"
+        },
+        {
+            "label": "Type check with mypy",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "mypy",
+                "snowfakery_mcp"
+            ],
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*):(\\d+): (.*)$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                },
+                "severity": "warning"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "pytest",
+                "-v",
+                "tests/"
+            ],
+            "problemMatcher": [],
+            "group": "test"
+        },
+        {
+            "label": "Run tests with coverage",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "pytest",
+                "-v",
+                "--cov=snowfakery_mcp",
+                "--cov-report=html",
+                "--cov-report=term-missing",
+                "--cov-fail-under=80",
+                "tests/"
+            ],
+            "problemMatcher": [],
+            "group": "test"
+        },
+        {
+            "label": "Generate coverage report (HTML)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "pytest",
+                "--cov=snowfakery_mcp",
+                "--cov-report=html:htmlcov",
+                "--cov-report=term-missing:skip-covered",
+                "tests/"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true
+            },
+            "group": "test"
+        },
+        {
+            "label": "Run MCP server",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "snowfakery-mcp"
+            ],
+            "isBackground": false,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true
+            },
+            "group": "none"
+        },
+        {
+            "label": "Check all (format + lint + type check)",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "-c",
+                "uv run ruff check snowfakery_mcp tests scripts evals && uv run ruff format --check snowfakery_mcp tests scripts evals && uv run mypy snowfakery_mcp"
+            ],
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}

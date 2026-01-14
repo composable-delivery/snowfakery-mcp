@@ -40,23 +40,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           version: latest
 
       - name: Cache uv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Run tests
         if: inputs.run_tests
-        run: uv run pytest
+        run: uv run pytest --ignore=Snowfakery
 
       - name: Generate third-party notices
         run: uv run python scripts/generate_third_party_notices.py
@@ -88,14 +88,14 @@ jobs:
           cp dist/*.whl dist/*.tar.gz pypi-dist/
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-assets
           path: release-assets
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pypi-dist
           path: pypi-dist
@@ -112,23 +112,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           version: latest
 
       - name: Cache uv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
@@ -193,23 +193,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           version: latest
 
       - name: Cache uv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
@@ -220,7 +220,7 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest --ignore=Snowfakery
 
       - name: Derive version from tag
         id: version
@@ -314,14 +314,14 @@ jobs:
             release-assets/*
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-assets
           path: release-assets
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pypi-dist
           path: pypi-dist
@@ -349,7 +349,7 @@ jobs:
 
     steps:
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: pypi-dist
           path: dist

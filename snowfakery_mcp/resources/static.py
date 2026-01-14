@@ -13,7 +13,7 @@ from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from snowfakery_mcp.core.assets import (
     docs_root,
@@ -63,13 +63,18 @@ def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("arch", "ArchIndex.md"))
 
+    @mcp.resource("snowfakery://docs/embedding")
+    def docs_embedding_resource() -> str:
+        root = docs_root(paths)
+        return read_text_utf8(root.joinpath("embedding.md"))
+
     @mcp.resource("snowfakery://examples/list")
     def examples_list_resource() -> str:
         root = examples_root(paths)
         names = iter_files(root, suffixes=[".yml"])
         return json.dumps({"examples": names}, indent=2)
 
-    @mcp.resource("snowfakery://examples/{name}")
+    @mcp.resource("snowfakery://examples/{name*}")
     def example_resource(name: str) -> str:
         root = examples_root(paths)
         node: Path | Traversable
