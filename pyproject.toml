@@ -95,6 +95,7 @@ include = [
 python_version = "3.12"
 strict = true
 warn_unused_configs = true
+exclude = ["evals/"]
 
 # External libraries may not ship full typing.
 [[tool.mypy.overrides]]

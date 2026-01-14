@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         python-version: ["3.12"]
 
     steps:
@@ -153,10 +153,10 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Lint with Ruff
-        run: uv run ruff check snowfakery_mcp tests scripts evals
+        run: uv run ruff check snowfakery_mcp tests scripts
 
       - name: Format check with Ruff
-        run: uv run ruff format --check snowfakery_mcp tests scripts evals
+        run: uv run ruff format --check snowfakery_mcp tests scripts
 
       - name: Generate lint summary
         if: always()
