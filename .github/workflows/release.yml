@@ -88,14 +88,14 @@ jobs:
           cp dist/*.whl dist/*.tar.gz pypi-dist/
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-assets
           path: release-assets
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pypi-dist
           path: pypi-dist
@@ -314,14 +314,14 @@ jobs:
             release-assets/*
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-assets
           path: release-assets
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pypi-dist
           path: pypi-dist
