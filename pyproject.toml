@@ -69,14 +69,6 @@ path = "snowfakery_mcp/__about__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["snowfakery_mcp"]
-include = [
-    "snowfakery_mcp/schema/*.py",
-    "snowfakery_mcp/schema/*.json",
-    "snowfakery_mcp/bundled_docs/**/*.py",
-    "snowfakery_mcp/bundled_docs/**/*.md",
-    "snowfakery_mcp/bundled_examples/**/*.py",
-    "snowfakery_mcp/bundled_examples/**/*.yml",
-]
 
 [tool.hatch.build.targets.sdist]
 include = [

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Build a complete .mcpb bundle for this MCP server.
+"""Build a .mcpb bundle for this MCP server using the uv runtime.
 
-This script produces a self-contained .mcpb file (a ZIP archive) that includes:
+This script produces a .mcpb file (a ZIP archive) that includes:
 
 - manifest.json: Bundle metadata and entry point configuration
 - server/: The complete MCP server code from snowfakery_mcp/
-- lib/: All bundled Python package dependencies
+- pyproject.toml: Dependency declarations (uv installs these at runtime)
 - Supporting documentation (README.md, etc.)
 
-The bundle is intended as a complete, portable distribution artifact for GitHub Releases
-and can be installed and run by MCP clients that support Python bundles.
+The bundle uses type: "uv" which means Claude Desktop will use uv to manage
+Python dependencies automatically. This results in smaller bundles (~100KB)
+compared to bundling all dependencies (~27MB).
+
+Requirements: Users must have uv installed (e.g., `brew install uv` on macOS).
 """
 
 from __future__ import annotations
@@ -119,10 +122,26 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
             "claude",
             "recipes",
         ],
-        # Server configuration: how to run the bundled server
+        # Server configuration: use uv tool run to install and run from PyPI
         "server": {
             "type": "python",
             "entry_point": "server/main.py",
+            "mcp_config": {
+                "command": "uv",
+                "args": [
+                    "tool",
+                    "run",
+                    "--from",
+                    f"snowfakery-mcp=={resolved_version}",
+                    "snowfakery-mcp",
+                ],
+            },
+        },
+        # Declare runtime requirements
+        "compatibility": {
+            "runtimes": {
+                "python": ">=3.10",
+            },
         },
     }
 
@@ -130,7 +149,6 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
         server_dir = tmpdir_path / "server"
-        lib_dir = tmpdir_path / "lib"
 
         # 1. Copy the snowfakery_mcp package into server/
         server_dir.mkdir(parents=True)
@@ -141,64 +159,45 @@ def build_bundle(output_path: Path, *, override_version: str | None = None) -> N
         )
 
         # 2. Create the entry point script
-        entry_point = """#!/usr/bin/env python3
-\"\"\"Entry point for Snowfakery MCP Server bundled in .mcpb.
+        entry_point = '''#!/usr/bin/env python3
+"""Entry point for Snowfakery MCP Server bundled in .mcpb.
 
-This script runs the bundled MCP server with dependencies from lib/.
-\"\"\"
+This script is run by Claude Desktop using the uv runtime.
+Dependencies are installed automatically by uv from pyproject.toml.
+
+Requirements:
+  - uv must be installed: https://docs.astral.sh/uv/getting-started/installation
+  - Install via: brew install uv (macOS) or curl -LsSf https://astral.sh/uv/install.sh | sh
+"""
 import sys
-from pathlib import Path
 
-# Add bundled lib directory to Python path so imports work
-bundle_lib = Path(__file__).parent.parent / "lib"
-if bundle_lib.exists():
-    sys.path.insert(0, str(bundle_lib))
-
-# Now import and run the server
-from snowfakery_mcp.server import run
+try:
+    from snowfakery_mcp.server import run
+except ImportError as e:
+    print(
+        f"ERROR: Failed to import snowfakery_mcp: {e}\\n"
+        "\\n"
+        "This usually means dependencies are not installed.\\n"
+        "This server should be run via Claude Desktop with uv.\\n"
+        "\\n"
+        "If uv is not installed, install it first:\\n"
+        "  Mac/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh\\n"
+        "  Windows:   powershell -ExecutionPolicy ByPass -c \\"irm https://astral.sh/uv/install.ps1 | iex\\"\\n"
+        "  Homebrew:  brew install uv\\n"
+        "\\n"
+        "More info: https://docs.astral.sh/uv/getting-started/installation\\n",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 if __name__ == "__main__":
     run()
-"""
+'''
         (server_dir / "main.py").write_text(entry_point)
         (server_dir / "main.py").chmod(0o755)
 
-        # 3. Bundle all runtime dependencies (including transitive) using uv + uv.lock
-        print("Bundling Python dependencies...")
-        lib_dir.mkdir(parents=True)
-
-        # Export locked runtime dependencies to a requirements file (exclude dev groups and the project itself).
-        req_path = tmpdir_path / "requirements.txt"
-        subprocess.run(
-            [
-                "uv",
-                "export",
-                "--frozen",
-                "--format",
-                "requirements.txt",
-                "--no-dev",
-                "--no-emit-project",
-                "--no-header",
-                "--no-annotate",
-                "--output-file",
-                str(req_path),
-            ],
-            check=True,
-        )
-
-        # Install the exported requirements into the bundle's lib/ directory.
-        subprocess.run(
-            [
-                "uv",
-                "pip",
-                "install",
-                "--requirements",
-                str(req_path),
-                "--target",
-                str(lib_dir),
-            ],
-            check=True,
-        )
+        # 3. Copy pyproject.toml (uv uses this to install dependencies at runtime)
+        shutil.copy(root / "pyproject.toml", tmpdir_path / "pyproject.toml")
 
         # 4. Create manifest.json
         manifest_path = tmpdir_path / "manifest.json"
@@ -221,7 +220,7 @@ if __name__ == "__main__":
     print(f"Created bundle: {output_path}")
     print(f"  Version: {resolved_version}")
     print("  Entry point: server/main.py")
-    print("  Type: python")
+    print("  Type: uv (dependencies installed at runtime)")
 
 
 def main() -> int:
