@@ -186,7 +186,7 @@ jobs:
 
       - name: Verify wheel version
         run: |
-          WHEEL=$(ls dist/*.whl | head -1)
+          WHEEL=$(ls dist/snowfakery_mcp-${{ steps.version.outputs.version }}-*.whl | head -1)
           uv run python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
 
       - name: Generate SBOM (SPDX JSON)

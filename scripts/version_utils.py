@@ -15,6 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from packaging.version import InvalidVersion, Version
+
 
 def validate_tag(tag: str) -> bool:
     """Validate tag format (vX.Y.Z)."""
@@ -36,9 +38,18 @@ def derive_version_from_tag(tag: str) -> str | None:
     if not validate_tag(tag):
         return None
 
-    version = tag[1:]  # Remove 'v' prefix
-    print(f"📌 Derived version: {version}", file=sys.stderr)
-    return version
+    raw_version = tag[1:]  # Remove 'v' prefix
+    try:
+        normalized = str(Version(raw_version))
+    except InvalidVersion:
+        print(
+            f"❌ Tag '{tag}' contains an invalid PEP 440 version: '{raw_version}'",
+            file=sys.stderr,
+        )
+        return None
+
+    print(f"📌 Derived version: {normalized}", file=sys.stderr)
+    return normalized
 
 
 def _update_version_file(version: str) -> bool:
@@ -186,14 +197,21 @@ def verify_wheel_version(wheel_path: str, expected_version: str) -> bool:
             return False
 
         actual = m.group(1).strip()
-        if actual != expected_version:
+        try:
+            actual_norm = str(Version(actual))
+            expected_norm = str(Version(expected_version))
+        except InvalidVersion as e:
+            print(f"❌ Invalid version during comparison: {e}", file=sys.stderr)
+            return False
+
+        if actual_norm != expected_norm:
             print(
-                f"❌ Wheel version {actual} != expected {expected_version}",
+                f"❌ Wheel version {actual_norm} != expected {expected_norm}",
                 file=sys.stderr,
             )
             return False
 
-        print(f"✅ Wheel version verified: {actual}")
+        print(f"✅ Wheel version verified: {actual_norm}")
         return True
 
     except Exception as e:
