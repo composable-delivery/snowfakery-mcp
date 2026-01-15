@@ -24,6 +24,10 @@ def register_capabilities_tools(mcp: FastMCP, config: Config) -> None:
         return {
             "snowfakery_version": snowfakery_version,
             "supported_output_formats": list(file_extensions),
+            "timeout_seconds": config.timeout_seconds,
+            "max_capture_chars": config.max_capture_chars,
+            "max_reps": config.max_reps,
+            "max_target_count": config.max_target_count,
             "limits": {
                 "timeout_seconds": config.timeout_seconds,
                 "max_capture_chars": config.max_capture_chars,

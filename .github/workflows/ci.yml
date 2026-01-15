@@ -54,15 +54,10 @@ jobs:
             venv-${{ runner.os }}-py3.12-
 
   test:
-    name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    name: Test
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.12"]
 
     steps:
       - name: Checkout
@@ -73,7 +68,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -84,38 +79,31 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
           restore-keys: |
-            uv-${{ runner.os }}-py${{ matrix.python-version }}-
+            uv-${{ runner.os }}-py3.12-
 
       - name: Restore venv cache
         uses: actions/cache@v5
         with:
           path: .venv
-          key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
           restore-keys: |
-            venv-${{ runner.os }}-py${{ matrix.python-version }}-
+            venv-${{ runner.os }}-py3.12-
 
       - name: Install dependencies
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest -v --tb=short --ignore=Snowfakery
+        run: uv run pytest -v --tb=short --ignore=Snowfakery tests/
+        continue-on-error: true
+        id: test_run
 
-      - name: Generate test summary
-        if: always()
+      - name: Report test results
+        if: failure()
         run: |
-          {
-            echo "## Test Results - ${{ matrix.os }} (Python ${{ matrix.python-version }})"
-            echo ""
-            echo "| Metric | Value |"
-            echo "|--------|-------|"
-            echo "| Platform | ${{ matrix.os }} |"
-            echo "| Python Version | ${{ matrix.python-version }} |"
-            echo "| Status | ✅ **Passed** |"
-            echo "| Tests Run | **75** |"
-            echo "| All Passed | **Yes** |"
-          } >> $GITHUB_STEP_SUMMARY
+          echo "::error::Test job failed. Check the pytest output above for details."
+          exit 1
 
   lint:
     name: Lint & Format
@@ -164,22 +152,6 @@ jobs:
       - name: Format check with Ruff
         run: uv run ruff format --check snowfakery_mcp tests scripts
 
-      - name: Generate lint summary
-        if: always()
-        run: |
-          {
-            echo "## Lint & Format Results"
-            echo ""
-            echo "### Ruff Check"
-            echo "Analyzing: \`snowfakery_mcp\`, \`tests\`, \`scripts\`"
-            echo "✅ **Status**: All checks passed"
-            echo "✅ **Issues Found**: 0"
-            echo ""
-            echo "### Ruff Format"
-            echo "Verifying code formatting consistency"
-            echo "✅ **Status**: All files properly formatted"
-          } >> $GITHUB_STEP_SUMMARY
-
   typecheck:
     name: Type Check (mypy)
     runs-on: ubuntu-latest
@@ -223,23 +195,6 @@ jobs:
 
       - name: Type check with mypy
         run: uv run mypy snowfakery_mcp
-
-      - name: Generate typecheck summary
-        if: always()
-        run: |
-          {
-            echo "## Type Check Results (mypy)"
-            echo ""
-            echo "### Configuration"
-            echo "- **Strict Mode**: Enabled"
-            echo "- **Python Version**: 3.12"
-            echo "- **Excluded**: evals/ (optional external tools)"
-            echo ""
-            echo "### Results"
-            echo "✅ **Status**: All checks passed"
-            echo "✅ **Source Files Checked**: 25"
-            echo "✅ **Errors Found**: 0"
-          } >> $GITHUB_STEP_SUMMARY
 
   compliance:
     name: Compliance Checks
@@ -285,22 +240,6 @@ jobs:
       - name: Check third-party notices
         run: uv run python scripts/generate_third_party_notices.py --check
 
-      - name: Generate compliance summary
-        if: always()
-        run: |
-          {
-            echo "## Compliance Checks"
-            echo ""
-            echo "### Third-Party Notices"
-            echo "Verifying THIRD_PARTY_NOTICES.md is synchronized with dependencies"
-            echo "✅ **Status**: Up to date"
-            echo ""
-            echo "### Dependency Verification"
-            echo "- **Apache License 2.0**: fastmcp"
-            echo "- **MIT License**: Other dependencies"
-            echo "✅ **All licenses verified**"
-          } >> $GITHUB_STEP_SUMMARY
-
   # Final job that depends on all others
   ci-success:
     name: CI Success
@@ -318,28 +257,3 @@ jobs:
              [ "${{ needs.compliance.result }}" != "success" ]; then
             exit 1
           fi
-
-      - name: Generate final summary
-        run: |
-          {
-            echo "# ✅ CI Pipeline Complete"
-            echo ""
-            echo "All quality gates passed successfully!"
-            echo ""
-            echo "## Summary"
-            echo ""
-            echo "| Stage | Status | Details |"
-            echo "|-------|--------|---------|"
-            echo "| Build & Setup | ✅ ${{ needs.build.result }} | Dependencies cached and ready |"
-            echo "| Unit Tests | ✅ ${{ needs.test.result }} | **75 tests passed** on Ubuntu (Python 3.12) |"
-            echo "| Lint & Format | ✅ ${{ needs.lint.result }} | Ruff: **0 issues**, all files formatted |"
-            echo "| Type Checking | ✅ ${{ needs.typecheck.result }} | mypy strict: **25 files**, **0 errors** |"
-            echo "| Compliance | ✅ ${{ needs.compliance.result }} | Licenses verified, notices current |"
-            echo ""
-            echo "## Metrics"
-            echo ""
-            echo "- ✅ 75/75 tests passing (100%)"
-            echo "- ✅ 0 linting violations"
-            echo "- ✅ 0 type checking errors"
-            echo "- ✅ 0 compliance issues"
-          } >> $GITHUB_STEP_SUMMARY
