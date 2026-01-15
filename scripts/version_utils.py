@@ -26,7 +26,7 @@ def validate_tag(tag: str) -> bool:
         print(f"❌ Tag '{tag}' does not match vX.Y.Z format", file=sys.stderr)
         return False
 
-    print(f"✅ Tag format valid: {tag}")
+    print(f"✅ Tag format valid: {tag}", file=sys.stderr)
     return True
 
 
@@ -36,7 +36,7 @@ def derive_version_from_tag(tag: str) -> str | None:
         return None
 
     version = tag[1:]  # Remove 'v' prefix
-    print(f"📌 Derived version: {version}")
+    print(f"📌 Derived version: {version}", file=sys.stderr)
     return version
 
 
