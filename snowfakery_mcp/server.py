@@ -18,6 +18,8 @@ from snowfakery_mcp.prompts import register_prompts
 from snowfakery_mcp.resources.discovery import register_discovery_resources
 from snowfakery_mcp.resources.runs import register_run_resources
 from snowfakery_mcp.resources.static import register_static_resources
+from snowfakery_mcp.resources.templates import register_template_resources
+from snowfakery_mcp.tools.agentic import register_agentic_tools
 from snowfakery_mcp.tools.analyze import register_analyze_tool
 from snowfakery_mcp.tools.capabilities import register_capabilities_tools
 from snowfakery_mcp.tools.docs import register_doc_tools
@@ -102,6 +104,7 @@ def create_app() -> FastMCP:
         - snowfakery://schema/recipe-jsonschema - Recipe JSON schema
         - snowfakery://docs/* - Documentation
         - snowfakery://examples/* - Example recipes
+        - snowfakery://templates/* - Community recipe templates
         - snowfakery://providers/list - Available Faker providers
         - snowfakery://plugins/list - Available plugins
         - snowfakery://formats/info - Output format details
@@ -116,6 +119,7 @@ def create_app() -> FastMCP:
 
     # Register static resources (schema, docs, examples)
     register_static_resources(app, paths)
+    register_template_resources(app, paths)
 
     # Register discovery resources (providers, plugins, formats)
     register_discovery_resources(app)
@@ -131,6 +135,7 @@ def create_app() -> FastMCP:
     register_analyze_tool(app, paths)
     register_run_tool(app, paths, config)
     register_mapping_tool(app, paths, config)
+    register_agentic_tools(app, paths, config)
 
     # Register prompts
     register_prompts(app)

@@ -2,23 +2,31 @@ from __future__ import annotations
 
 import textwrap
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 
 
 def register_prompts(mcp: FastMCP) -> None:
     @mcp.prompt(tags={"authoring"})
-    def author_recipe(goal: str) -> str:
+    async def author_recipe(goal: str, ctx: Context) -> str:
         """Create a new Snowfakery recipe from a description of what data to generate."""
+        try:
+            schema_content = await ctx.read_resource("snowfakery://schema/recipe-jsonschema")
+            schema_section = f"\nSnowfakery Recipe Schema (partial/full):\n{schema_content}\n"
+        except Exception:
+            schema_section = "Note: Could not load schema automatically. Please use the tool to fetch it if needed."
+
         return textwrap.dedent(
             f"""
             You are authoring a Snowfakery recipe.
 
             Goal:
             {goal}
+            {schema_section}
 
             Requirements:
-            - Consult the Snowfakery schema resource: snowfakery://schema/recipe-jsonschema
+            - Consult the included schema above.
             - Consult at least one relevant example: snowfakery://examples/list then snowfakery://examples/<name>
+            - Check community templates for complex patterns: snowfakery://templates/list
             - Use snowfakery_version: 3
             - Prefer options (option/default) + --option for tunable parameters
             - Validate with validate_recipe before presenting the final recipe

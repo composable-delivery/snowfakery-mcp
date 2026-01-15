@@ -1,0 +1,72 @@
+name: Eval (Snowfakery Agentic)
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Model to use from GitHub Models"
+        required: true
+        default: "gpt-4o-mini"
+        type: choice
+        options:
+          - gpt-4o
+          - gpt-4o-mini
+          - Meta-Llama-3.1-405B-Instruct
+          - Meta-Llama-3.1-70B-Instruct
+          - Mistral-large
+          - Mistral-small
+          - cohere-command-r-plus
+      iterations:
+        description: "Number of times to repeat the task (for stability check)"
+        required: false
+        default: "1"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --group evals
+
+      - name: Run Eval
+        env:
+          # Use GITHUB_TOKEN as the API key for GitHub Models
+          OPENAI_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          # Point standard OpenAI clients to the Azure AI Inference endpoint
+          INSPECT_EVAL_MODEL_BASE_URL: https://models.inference.ai.azure.com
+          # Configure timeouts/limits for the MCP server in CI
+          SNOWFAKERY_MCP_MAX_REPS: "50"
+          SNOWFAKERY_MCP_MAX_TARGET_COUNT: "200"
+          SNOWFAKERY_MCP_TIMEOUT_SECONDS: "60"
+        run: |
+          uv run --group evals inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic \
+            --model openai/${{ inputs.model }} \
+            --limit ${{ inputs.iterations }} \
+            --log-dir logs
+
+      - name: Upload Eval Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspect-logs-${{ inputs.model }}
+          path: logs/*.eval
