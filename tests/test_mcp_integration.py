@@ -149,8 +149,8 @@ async def test_list_examples(mcp_client: Client[Any]) -> None:
 async def test_get_example(mcp_client: Client[Any]) -> None:
     result = await mcp_client.call_tool("get_example", {"name": "company.yml"})
     payload = get_tool_data(result)
-    assert "text" in payload
-    assert "- object:" in payload["text"]
+    assert "content" in payload
+    assert "- object:" in payload["content"]
 
 
 @pytest.mark.anyio
