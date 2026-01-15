@@ -50,18 +50,23 @@ jobs:
 
       - name: Create History Directory
         run: |
-          if [ ! -d "eval-history" ]; then
-            echo "Creating orphan branch structure for history..."
+          # Check if the directory is a valid git repo (successful checkout)
+          if [ ! -d "eval-history/.git" ]; then
+            echo "Initializing orphan branch structure for history..."
+            # Clean up potential empty dir from failed checkout
+            rm -rf eval-history
             mkdir eval-history
             cd eval-history
-            git init
-            git checkout -b eval-history
-            # dummy commit to allow switching
-            touch .gitkeep
+            # Init explicitly with the target branch name
+            git init -b eval-history
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            # Create a placeholder to start the history
+            touch .gitkeep
             git add .gitkeep
             git commit -m "Init history"
+          else
+            echo "History branch checked out successfully."
           fi
 
       - name: Install uv
@@ -118,9 +123,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Add eval log for ${{ inputs.model }} at ${TIMESTAMP}" || echo "No changes to commit"
-          # Handle race conditions with rebase
+          
+          # Fetch latest state (in case branch exists now but didn't earlier)
+          git fetch origin eval-history || echo "Remote branch not found yet"
+          
+          # Rebase on top of remote if it exists
           git pull --rebase origin eval-history || echo "Branch might be new, skipping pull"
-          git push origin eval-history || git push origin eval-history:eval-history
+          
+          # Push HEAD to the remote eval-history branch
+          git push origin HEAD:eval-history
 
       - name: Bundle HTML Report (All History)
         run: |
