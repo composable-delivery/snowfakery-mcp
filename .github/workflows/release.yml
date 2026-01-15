@@ -365,6 +365,7 @@ jobs:
           
           mkdir -p ~/.mcp-publisher
           echo "${{ secrets.MCP_REGISTRY_CREDENTIALS }}" > ~/.mcp-publisher/credentials.json
+          chmod 600 ~/.mcp-publisher/credentials.json
           
           # Verify credentials file exists
           if [ ! -f ~/.mcp-publisher/credentials.json ]; then
