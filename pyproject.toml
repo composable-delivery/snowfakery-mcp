@@ -1,6 +1,6 @@
 [project]
 name = "snowfakery-mcp"
-dynamic = ["version"]
+version = "0.0.2.dev0"
 description = "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -22,7 +22,6 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 norecursedirs = ["Snowfakery", ".venv", "dist", "build", "*.egg"]
-asyncio_mode = "auto"
 markers = [
     "anyio: async integration tests",
     "integration: integration tests",
@@ -62,15 +61,8 @@ snowfakery-mcp = "snowfakery_mcp.server:run"
 package = true
 
 [build-system]
-requires = ["hatchling>=1.27.0", "hatch-vcs>=0.4"]
+requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "vcs"
-fallback-version = "0.0.0.dev0"
-
-[tool.hatch.version.raw-options]
-local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
 packages = ["snowfakery_mcp"]

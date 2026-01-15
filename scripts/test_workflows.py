@@ -34,8 +34,8 @@ def validate_yaml(file_path: Path) -> bool:
         return False
 
 
-def test_script_directly(script_path: str) -> bool:
-    """Test script directly with python -m."""
+def check_script_directly(script_path: str) -> bool:
+    """Check script directly with python -m."""
     print(f"🔍 Testing {script_path} --help")
     try:
         result = subprocess.run(
@@ -80,8 +80,8 @@ def validate_workflows() -> bool:
     return all_valid
 
 
-def test_scripts() -> bool:
-    """Test that scripts have working --help."""
+def check_scripts() -> bool:
+    """Check that scripts have working --help."""
     print("\n📝 Testing scripts:\n")
 
     scripts = [
@@ -91,7 +91,7 @@ def test_scripts() -> bool:
 
     all_working = True
     for script in scripts:
-        if not test_script_directly(script):
+        if not check_script_directly(script):
             all_working = False
 
     return all_working
@@ -121,8 +121,8 @@ def main() -> int:
         if not args.scripts_only:
             results.append(("Workflow YAML validation", validate_workflows()))
 
-        if not args.workflows_only:
-            results.append(("Script validation", test_scripts()))
+        if not args.scripts_only:
+            results.append(("Script validation", check_scripts()))
 
         # Summary
         print("\n" + "=" * 60)
