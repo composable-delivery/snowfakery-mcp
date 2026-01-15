@@ -12,6 +12,9 @@ logs/
 # MCP logs
 .snowfakery-mcp/
 
+# MCP Bundles
+*.mcpb
+
 # Distribution / packaging
 .Python
 build/

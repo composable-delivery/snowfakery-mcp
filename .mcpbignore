@@ -1,0 +1,57 @@
+# Virtual environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.tmp/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitmodules
+
+# CI/CD
+.github/
+.devcontainer/
+
+# Tests and evals (not needed in bundle)
+tests/
+evals/
+notebooks/
+
+# Development files
+.pre-commit-config.yaml
+.python-version
+.claude/
+
+# Documentation (optional - keep README)
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+COMMUNITY.md
+SECURITY.md
+RELEASE.md
+COPYRIGHT
+
+# Scripts (not needed in bundle)
+scripts/
+
+# Release assets
+release-assets/
+
+# Large generated docs
+FASTMCP_LLM_DOCS.txt
+
+# Submodules
+Snowfakery/

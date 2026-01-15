@@ -1,0 +1,103 @@
+name: Build MCPB Bundle
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version for the bundle (e.g., 0.0.2b1)"
+        required: true
+        type: string
+      artifact-name:
+        description: "Name for the uploaded artifact"
+        required: false
+        type: string
+        default: "mcpb-bundle"
+    outputs:
+      bundle-path:
+        description: "Path to the built .mcpb file"
+        value: ${{ jobs.build.outputs.bundle-path }}
+      bundle-name:
+        description: "Filename of the built .mcpb file"
+        value: ${{ jobs.build.outputs.bundle-name }}
+
+jobs:
+  build:
+    name: Build MCPB
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      bundle-path: ${{ steps.pack.outputs.bundle-path }}
+      bundle-name: ${{ steps.pack.outputs.bundle-name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install mcpb CLI
+        run: npm install -g @anthropic-ai/mcpb
+
+      - name: Update manifest version
+        run: |
+          # Update version in manifest.json
+          jq --arg v "${{ inputs.version }}" '.version = $v' manifest.json > manifest.tmp.json
+          mv manifest.tmp.json manifest.json
+          cat manifest.json
+
+      - name: Build MCPB bundle
+        id: pack
+        run: |
+          BUNDLE_NAME="snowfakery-mcp-${{ inputs.version }}.mcpb"
+          BUNDLE_PATH="dist/${BUNDLE_NAME}"
+          mkdir -p dist
+
+          # Pack using mcpb CLI (skip validation due to UV runtime bug)
+          # The mcpb validator incorrectly requires mcp_config for type: "uv"
+          # Using zip directly for now until validator is fixed
+          zip -r "${BUNDLE_PATH}" \
+            manifest.json \
+            pyproject.toml \
+            uv.lock \
+            snowfakery_mcp/ \
+            README.md \
+            LICENSE-MIT \
+            LICENSE-APACHE \
+            MCP_SERVER_SPEC.md \
+            THIRD_PARTY_NOTICES.md \
+            -x "*.pyc" \
+            -x "*__pycache__*" \
+            -x "snowfakery_mcp/__pycache__/*"
+
+          echo "bundle-path=${BUNDLE_PATH}" >> "$GITHUB_OUTPUT"
+          echo "bundle-name=${BUNDLE_NAME}" >> "$GITHUB_OUTPUT"
+
+          # Show bundle info
+          ls -lh "${BUNDLE_PATH}"
+          unzip -l "${BUNDLE_PATH}" | head -30
+
+      - name: Verify bundle structure
+        run: |
+          BUNDLE_PATH="${{ steps.pack.outputs.bundle-path }}"
+
+          # Verify manifest exists and is valid JSON
+          unzip -p "${BUNDLE_PATH}" manifest.json | jq .
+
+          # Verify key files exist
+          unzip -l "${BUNDLE_PATH}" | grep -q "pyproject.toml" || (echo "Missing pyproject.toml" && exit 1)
+          unzip -l "${BUNDLE_PATH}" | grep -q "uv.lock" || (echo "Missing uv.lock" && exit 1)
+          unzip -l "${BUNDLE_PATH}" | grep -q "snowfakery_mcp/server.py" || (echo "Missing server.py" && exit 1)
+
+          echo "✅ Bundle structure verified"
+
+      - name: Upload MCPB artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ steps.pack.outputs.bundle-path }}
+          if-no-files-found: error
