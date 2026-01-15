@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from importlib.resources.abc import Traversable
 from pathlib import Path, PurePosixPath
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from snowfakery_mcp.core.assets import iter_files, safe_relpath
+from snowfakery_mcp.core.assets import docs_root, examples_root, iter_files, safe_relpath
 
 
 class TestSafeRelpath:
@@ -131,3 +133,47 @@ class TestIterFiles:
 
         files = iter_files(tmp_path, suffixes=[".txt"])
         assert files == ["file.txt"]
+
+    def test_iter_files_traversable(self) -> None:
+        """Test iterating over a Traversable object (mocked)."""
+        root = MagicMock(spec=Traversable)
+        file1 = MagicMock(spec=Traversable)
+        file1.is_dir.return_value = False
+        file1.name = "foo.txt"
+
+        dir1 = MagicMock(spec=Traversable)
+        dir1.is_dir.return_value = True
+        dir1.name = "subdir"
+
+        file2 = MagicMock(spec=Traversable)
+        file2.is_dir.return_value = False
+        file2.name = "bar.txt"
+
+        dir1.iterdir.return_value = [file2]
+        root.iterdir.return_value = [file1, dir1]
+
+        results = iter_files(root, suffixes=[".txt"])
+        assert "foo.txt" in results
+        assert "subdir/bar.txt" in results
+
+
+class TestRootResolvers:
+    """Test asset root resolution (docs/examples)."""
+
+    def test_docs_root_fallback(self) -> None:
+        """Test fallback to bundled docs when submodule missing."""
+        mock_paths = MagicMock()
+        mock_paths.root = Path("/fake")
+        with patch("pathlib.Path.exists", return_value=False):
+            with patch("importlib.resources.files") as mock_files:
+                docs_root(mock_paths)
+                mock_files.assert_called_with("snowfakery_mcp.bundled_docs")
+
+    def test_examples_root_fallback(self) -> None:
+        """Test fallback to bundled examples when submodule missing."""
+        mock_paths = MagicMock()
+        mock_paths.root = Path("/fake")
+        with patch("pathlib.Path.exists", return_value=False):
+            with patch("importlib.resources.files") as mock_files:
+                examples_root(mock_paths)
+                mock_files.assert_called_with("snowfakery_mcp.bundled_examples")

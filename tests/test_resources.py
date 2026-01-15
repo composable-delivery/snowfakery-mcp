@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -139,3 +141,39 @@ async def test_example_resource_readable(mcp_client: Client[Any]) -> None:
         # Example should contain recipe content
         assert len(text) > 0
         assert "object:" in text or "Object:" in text  # YAML recipe syntax
+
+
+@pytest.mark.anyio
+async def test_run_artifact_directory_listing(mcp_client: Client[Any]) -> None:
+    """Test reading a directory artifact from a run returns a file listing."""
+    # Setup - assume workspace root is CWD
+    root = Path.cwd()
+    runs_dir = root / ".snowfakery-mcp" / "runs"
+    run_id = "test_run_dir_listing"
+    target_run_dir = runs_dir / run_id
+
+    # Create structure
+    artifact_dir = target_run_dir / "output"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    (artifact_dir / "file1.txt").write_text("content1")
+    (artifact_dir / "subdir").mkdir()
+    (artifact_dir / "subdir" / "file2.txt").write_text("content2")
+
+    try:
+        # Action
+        content = await mcp_client.read_resource(f"snowfakery://runs/{run_id}/output")
+        text = content[0].text if hasattr(content[0], "text") else str(content[0])
+        data = json.loads(text)
+
+        # Assertion
+        assert "files" in data
+        files = data["files"]
+        assert "output/file1.txt" in files
+        # Normalize path separators for Windows/Linux consistency in check
+        normalized_files = [f.replace("\\", "/") for f in files]
+        assert "output/subdir/file2.txt" in normalized_files
+
+    finally:
+        # Cleanup
+        if target_run_dir.exists():
+            shutil.rmtree(target_run_dir)

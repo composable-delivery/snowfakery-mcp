@@ -95,8 +95,8 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest -v --tb=short --ignore=Snowfakery tests/
-        continue-on-error: true
+        run: uv run pytest -v --cov=snowfakery_mcp --cov-report=term-missing --cov-report=xml --ignore=Snowfakery tests/
+        continue-on-error: false
         id: test_run
 
       - name: Report test results

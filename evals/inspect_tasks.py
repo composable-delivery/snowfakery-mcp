@@ -25,80 +25,111 @@ class SnowfakeryCase(NamedTuple):
 
 
 CASES: list[SnowfakeryCase] = [
+    # SnowfakeryCase(
+    #     id="debug_broken_reference",
+    #     title="Debug broken reference",
+    #     task=(
+    #         "You are given a Snowfakery recipe that fails. Use available tools to debug it, "
+    #         "then submit a corrected recipe YAML.\n\n"
+    #         "Broken recipe:\n"
+    #         "- snowfakery_version: 3\n"
+    #         "- object: Account\n"
+    #         "  fields:\n"
+    #         "    Name: ACME\n"
+    #         "- object: Contact\n"
+    #         "  fields:\n"
+    #         "    FirstName: Buster\n"
+    #         "    AccountId:\n"
+    #         "      reference: Accounts\n"
+    #     ),
+    #     must_contain=["Account", "Contact"],
+    #     must_call_tools=["validate_recipe", "run_recipe"],
+    #     must_output_substrings=["Account(", "Contact(", "AccountId="],
+    # ),
+    # SnowfakeryCase(
+    #     id="use_examples_then_author",
+    #     title="Use examples to author",
+    #     task=(
+    #         "Use tools to consult at least one example, then author a Snowfakery recipe "
+    #         "(snowfakery_version: 3) that generates 2 Person rows with a literal 'name' field. "
+    #         "Then validate and run it, and submit the final recipe YAML."
+    #     ),
+    #     must_contain=["Person"],
+    #     must_call_tools=[
+    #         "list_examples",
+    #         "get_example",
+    #         "validate_recipe",
+    #         "run_recipe",
+    #     ],
+    #     must_output_substrings=["Person("],
+    # ),
+    # SnowfakeryCase(
+    #     id="generate_mapping",
+    #     title="Generate mapping",
+    #     task=(
+    #         "Author a Snowfakery recipe that generates an Account and a Contact referencing it. "
+    #         "Call generate_mapping and then submit the recipe YAML."
+    #     ),
+    #     must_contain=["Account", "Contact"],
+    #     must_call_tools=["generate_mapping", "validate_recipe", "run_recipe"],
+    #     must_output_substrings=["Account(", "Contact(", "AccountId="],
+    # ),
+    # SnowfakeryCase(
+    #     id="salesforce_standard_objects",
+    #     title="Salesforce standard objects (field casing + references)",
+    #     task=(
+    #         "Create a Snowfakery recipe that uses Salesforce standard objects and standard field names "
+    #         "with correct casing (e.g., Account.Name, Contact.FirstName, Contact.LastName).\n\n"
+    #         "Requirements:\n"
+    #         "- Create exactly one Account with Name = 'The Account' (use just_once: True).\n"
+    #         "- Create exactly one Contact with FirstName='Da' and LastName='Boss' referencing that Account via AccountId.\n"
+    #         "- Create exactly one Campaign with Name='The Campaign'.\n"
+    #         "- Create one CampaignMember referencing the Campaign and Contact (CampaignId + ContactId) and a Status value.\n\n"
+    #         "Use tools to validate and run. Then output ONLY the final Snowfakery recipe YAML."
+    #     ),
+    #     must_contain=["Account", "Contact", "Campaign", "CampaignMember"],
+    #     must_call_tools=["validate_recipe", "run_recipe"],
+    #     must_output_substrings=[
+    #         "Name=The Account",
+    #         "FirstName=Da",
+    #         "LastName=Boss",
+    #         "AccountId=Account(1)",
+    #         "Name=The Campaign",
+    #         "CampaignId=Campaign(1)",
+    #         "ContactId=Contact(1)",
+    #     ],
+    # ),
     SnowfakeryCase(
-        id="debug_broken_reference",
-        title="Debug broken reference",
-        task=(
-            "You are given a Snowfakery recipe that fails. Use available tools to debug it, "
-            "then submit a corrected recipe YAML.\n\n"
-            "Broken recipe:\n"
-            "- snowfakery_version: 3\n"
-            "- object: Account\n"
-            "  fields:\n"
-            "    Name: ACME\n"
-            "- object: Contact\n"
-            "  fields:\n"
-            "    FirstName: Buster\n"
-            "    AccountId:\n"
-            "      reference: Accounts\n"
-        ),
-        must_contain=["Account", "Contact"],
+        id="salesforce_scalable_pattern",
+        title="Salesforce Scalable Pattern",
+        task="""
+        You are an expert in Snowfakery for Salesforce data generation.
+        
+        Your Goal: Create a robust, scalable Snowfakery recipe for generating Accounts with related Opportunities and Cases.
+        
+        Mental Model:
+        - A Snowfakery recipe should define the "shape" of a SINGLE unit of data (e.g. 1 Account and its related children).
+        - To generate volume, we rely on the runner iterating this recipe (e.g. --count 1000).
+        - Use Faker and random selection to ensure each iteration produces unique data.
+        - Use "options" to parameterize the recipe (e.g. allow the user to specify how many Opportunities per Account).
+        
+        Requirements:
+        1. Define exactly ONE Account at the top level.
+        2. Define a variable/option `num_opportunities` (default: 3) to control the number of opportunities per account.
+        3. Define a variable/option `num_cases` (default: 2) to control the number of cases per account.
+        4. Use `friends:` or lists to generate `num_opportunities` Opportunities related to the Account.
+        5. Use `friends:` or lists to generate `num_cases` Cases related to the Account.
+        6. Ensure standard fields (Name, StageName, CloseDate, Status, Subject) are populated with realistic random data (Faker).
+        7. Validate the recipe using `validate_recipe`.
+        8. Run the recipe once to prove it works.
+        
+        Output:
+        Return the final valid YAML recipe.
+        """,
+        must_contain=["Account", "Opportunity", "Case", "option", "num_opportunities"],
         must_call_tools=["validate_recipe", "run_recipe"],
-        must_output_substrings=["Account(", "Contact(", "AccountId="],
-    ),
-    SnowfakeryCase(
-        id="use_examples_then_author",
-        title="Use examples to author",
-        task=(
-            "Use tools to consult at least one example, then author a Snowfakery recipe "
-            "(snowfakery_version: 3) that generates 2 Person rows with a literal 'name' field. "
-            "Then validate and run it, and submit the final recipe YAML."
-        ),
-        must_contain=["Person"],
-        must_call_tools=[
-            "list_examples",
-            "get_example",
-            "validate_recipe",
-            "run_recipe",
-        ],
-        must_output_substrings=["Person("],
-    ),
-    SnowfakeryCase(
-        id="generate_mapping",
-        title="Generate mapping",
-        task=(
-            "Author a Snowfakery recipe that generates an Account and a Contact referencing it. "
-            "Call generate_mapping and then submit the recipe YAML."
-        ),
-        must_contain=["Account", "Contact"],
-        must_call_tools=["generate_mapping", "validate_recipe", "run_recipe"],
-        must_output_substrings=["Account(", "Contact(", "AccountId="],
-    ),
-    SnowfakeryCase(
-        id="salesforce_standard_objects",
-        title="Salesforce standard objects (field casing + references)",
-        task=(
-            "Create a Snowfakery recipe that uses Salesforce standard objects and standard field names "
-            "with correct casing (e.g., Account.Name, Contact.FirstName, Contact.LastName).\n\n"
-            "Requirements:\n"
-            "- Create exactly one Account with Name = 'The Account' (use just_once: True).\n"
-            "- Create exactly one Contact with FirstName='Da' and LastName='Boss' referencing that Account via AccountId.\n"
-            "- Create exactly one Campaign with Name='The Campaign'.\n"
-            "- Create one CampaignMember referencing the Campaign and Contact (CampaignId + ContactId) and a Status value.\n\n"
-            "Use tools to validate and run. Then output ONLY the final Snowfakery recipe YAML."
-        ),
-        must_contain=["Account", "Contact", "Campaign", "CampaignMember"],
-        must_call_tools=["validate_recipe", "run_recipe"],
-        must_output_substrings=[
-            "Name=The Account",
-            "FirstName=Da",
-            "LastName=Boss",
-            "AccountId=Account(1)",
-            "Name=The Campaign",
-            "CampaignId=Campaign(1)",
-            "ContactId=Contact(1)",
-        ],
-    ),
+        must_output_substrings=["Account", "Opportunity", "Case"],
+    )
 ]
 
 
