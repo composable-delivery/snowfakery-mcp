@@ -352,14 +352,26 @@ jobs:
           fi
           echo "mcp-publisher installed successfully"
 
-      - name: Authenticate with MCP Registry
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore MCP Registry credentials
         run: |
-          # Authenticate using GitHub token for CI/CD
-          # NOTE: The exact auth command should be verified against mcp-publisher documentation
-          # This assumes the tool supports GitHub auth with GITHUB_TOKEN environment variable
-          mcp-publisher login github
+          # The mcp-publisher login github command uses an interactive OAuth device flow
+          # which doesn't work in CI/CD. Instead, we restore pre-authenticated credentials.
+          # 
+          # To set up:
+          # 1. Run locally: mcp-publisher login github
+          # 2. Find the credentials file (typically in ~/.mcp-publisher/ or ~/.config/mcp-publisher/)
+          # 3. Store the credentials as a GitHub Actions secret named MCP_REGISTRY_CREDENTIALS
+          # 4. The workflow will restore them here before publishing
+          
+          mkdir -p ~/.mcp-publisher
+          echo "${{ secrets.MCP_REGISTRY_CREDENTIALS }}" > ~/.mcp-publisher/credentials.json
+          
+          # Verify credentials file exists
+          if [ ! -f ~/.mcp-publisher/credentials.json ]; then
+            echo "ERROR: MCP Registry credentials not found"
+            echo "Please set up MCP_REGISTRY_CREDENTIALS secret in GitHub Actions"
+            exit 1
+          fi
 
       - name: Update server.json version
         run: |

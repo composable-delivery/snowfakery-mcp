@@ -108,6 +108,27 @@ The release workflow automatically publishes server metadata to the MCP Registry
 
 - **server.json**: Contains the MCP Registry metadata (name, description, packages, etc.)
 - **manifest.json**: Contains the `mcpName` field that matches the server name in `server.json`
-- **GitHub authentication**: Uses the `GITHUB_TOKEN` to authenticate with the MCP Registry
+- **GitHub authentication**: Uses pre-authenticated credentials stored as a GitHub Actions secret
 
 The server is published under the namespace `io.github.composable-delivery/snowfakery-mcp`, which is verified against the GitHub organization ownership.
+
+#### Setting up MCP Registry Authentication
+
+The `mcp-publisher` tool uses an interactive OAuth device flow for GitHub authentication, which doesn't work in CI/CD. To enable automated publishing:
+
+1. **Authenticate locally** (one-time setup):
+   ```bash
+   mcp-publisher login github
+   ```
+   Follow the prompts to complete the OAuth device flow.
+
+2. **Locate credentials file**:
+   The credentials are typically stored in `~/.mcp-publisher/credentials.json` or `~/.config/mcp-publisher/credentials.json`
+
+3. **Add to GitHub Actions secrets**:
+   - Go to repository Settings → Secrets and variables → Actions
+   - Create a new secret named `MCP_REGISTRY_CREDENTIALS`
+   - Paste the contents of the credentials file
+
+4. **Verify in workflow**:
+   The release workflow will restore these credentials before publishing to the registry.
