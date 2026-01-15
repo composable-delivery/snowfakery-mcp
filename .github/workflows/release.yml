@@ -63,29 +63,14 @@ jobs:
           restore-keys: |
             uv-${{ runner.os }}-py3.12-
 
-      - name: Install deps (frozen)
+      - name: Install dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Run tests
-        if: inputs.run_tests
-        run: uv run pytest --ignore=Snowfakery
-
-      - name: Generate third-party notices
-        run: uv run python scripts/generate_third_party_notices.py
-
-      - name: Build wheel + sdist
-        run: uv build
-
-      - name: Prepare release assets
+      - name: Prepare release
         run: |
-          mkdir -p release-assets
-          cp THIRD_PARTY_NOTICES.md release-assets/THIRD_PARTY_NOTICES.md
-          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-dev.mcpb"
-
-      - name: Prepare PyPI dist (wheel + sdist only)
-        run: |
-          mkdir -p pypi-dist
-          cp dist/*.whl dist/*.tar.gz pypi-dist/
+          python scripts/prepare_release.py \
+            --skip-notices \
+            --ignore-snowfakery
 
       - name: Upload release assets
         uses: actions/upload-artifact@v6
@@ -135,56 +120,20 @@ jobs:
           restore-keys: |
             uv-${{ runner.os }}-py3.12-
 
-      - name: Install deps (frozen)
+      - name: Install dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Generate third-party notices
-        run: uv run python scripts/generate_third_party_notices.py
-
-      - name: Run tests
-        if: inputs.run_tests
-        run: uv run pytest
-
       - name: Validate tag input
-        id: tag
         run: |
-          python - <<'PY'
-          import os
-          import re
+          python scripts/version_utils.py validate "${{ inputs.tag }}"
 
-          tag = os.environ.get('TAG', '')
-          if not tag:
-              raise SystemExit("When 'create_tag' is true, you must provide 'tag' (e.g. v0.2.0).")
-
-          m = re.match(r'^v(?P<ver>\d+\.\d+\.\d+(?:[a-zA-Z0-9\.\-]+)?)$', tag)
-          if not m:
-              raise SystemExit(f"Tag '{tag}' does not look like vX.Y.Z")
-
-          print('OK:', tag)
-          PY
-        env:
-          TAG: ${{ inputs.tag }}
-
-      - name: Set tag output
-        run: echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
-        id: tag_out
+      - name: Run tests (if requested)
+        if: inputs.run_tests
+        run: uv run pytest --ignore=Snowfakery
 
       - name: Create and push tag
         run: |
-          set -euo pipefail
-          TAG="${{ steps.tag_out.outputs.tag }}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag already exists locally: $TAG"
-          else
-            git tag -a "$TAG" -m "$TAG"
-          fi
-
-          # Push tag to origin. This will trigger a separate Release run on `push.tags`.
-          git push origin "refs/tags/$TAG"
+          python scripts/version_utils.py create "${{ inputs.tag }}"
 
   build:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
@@ -216,75 +165,29 @@ jobs:
           restore-keys: |
             uv-${{ runner.os }}-py3.12-
 
-      - name: Install deps (frozen)
+      - name: Install dependencies
         run: uv sync --all-groups --frozen
-
-      - name: Run tests
-        run: uv run pytest --ignore=Snowfakery
 
       - name: Derive version from tag
         id: version
         run: |
-          set -euo pipefail
-          ref="${GITHUB_REF_NAME:-}"
-          # Strip leading 'v' if present
-          if [ "${ref#v}" = "$ref" ]; then
-            echo "Tag '${ref}' does not start with 'v'" >&2
-            exit 1
-          fi
-          candidate="${ref#v}"
-          # Basic sanity check: must contain two dots
-          if [ "$(printf '%s' "$candidate" | awk -F. '{print NF-1}')" -lt 2 ]; then
-            echo "Tag '${ref}' does not look like vX.Y.Z" >&2
-            exit 1
-          fi
-          VERSION="$candidate"
+          VERSION=$(python scripts/version_utils.py derive "${{ github.ref_name }}")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Generate third-party notices
-        run: uv run python scripts/generate_third_party_notices.py
+      - name: Run tests
+        run: uv run pytest --ignore=Snowfakery
 
-      - name: Build wheel + sdist
-        run: uv build
-
-      - name: Prepare release assets
+      - name: Prepare release
         run: |
-          mkdir -p release-assets
-          cp THIRD_PARTY_NOTICES.md release-assets/THIRD_PARTY_NOTICES.md
-          python scripts/build_mcpb.py --output "release-assets/snowfakery-mcp-${{ steps.version.outputs.version }}.mcpb" --version "${{ steps.version.outputs.version }}"
+          python scripts/prepare_release.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --skip-tests \
+            --ignore-snowfakery
 
-      - name: Verify wheel version matches tag
+      - name: Verify wheel version
         run: |
-          python - <<'PY'
-          import glob
-          import os
-          import re
-          import zipfile
-
-          expected = os.environ['EXPECTED_VERSION']
-          wheels = glob.glob('dist/*.whl')
-          if not wheels:
-              raise SystemExit('No wheel found under dist/*.whl')
-
-          wheel = wheels[0]
-          with zipfile.ZipFile(wheel) as zf:
-              metas = [n for n in zf.namelist() if n.endswith('.dist-info/METADATA')]
-              if not metas:
-                  raise SystemExit('Wheel missing METADATA')
-              metadata = zf.read(metas[0]).decode('utf-8', errors='replace')
-
-          m = re.search(r'^Version:\s*(.+)\s*$', metadata, flags=re.MULTILINE)
-          if not m:
-              raise SystemExit('Could not find Version: in wheel METADATA')
-
-          actual = m.group(1).strip()
-          if actual != expected:
-              raise SystemExit(f'Wheel version {actual} != tag version {expected}')
-
-          print('OK:', wheel, 'version', actual)
-          PY
-        env:
-          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
+          WHEEL=$(ls dist/*.whl | head -1)
+          python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
 
       - name: Generate SBOM (SPDX JSON)
         uses: anchore/sbom-action@v0
@@ -292,11 +195,6 @@ jobs:
           path: .
           format: spdx-json
           output-file: release-assets/sbom.spdx.json
-
-      - name: Prepare PyPI dist (wheel + sdist only)
-        run: |
-          mkdir -p pypi-dist
-          cp dist/*.whl dist/*.tar.gz pypi-dist/
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v3

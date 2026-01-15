@@ -58,13 +58,13 @@ def register_example_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
                 return {
                     "name": name,
                     "path": f"bundled:snowfakery_mcp/bundled_examples/{rel}",
-                    "text": read_text_utf8(node),
+                    "content": read_text_utf8(node),
                 }
 
             path = paths.ensure_within(root, root / name)
             if not path.exists():
                 raise FileNotFoundError(f"Example not found: {name}")
-            return {"name": name, "path": str(path), "text": read_text_utf8(path)}
+            return {"name": name, "path": str(path), "content": read_text_utf8(path)}
 
         rel = safe_relpath(name)
         node = root.joinpath(*rel.parts)
@@ -75,5 +75,5 @@ def register_example_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
         return {
             "name": name,
             "path": f"bundled:snowfakery_mcp/bundled_examples/{rel}",
-            "text": read_text_utf8(node),
+            "content": read_text_utf8(node),
         }

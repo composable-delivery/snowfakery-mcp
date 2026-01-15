@@ -1,15 +1,20 @@
 repos:
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.11
     hooks:
+      - id: ruff
+        name: ruff check
+        args: [--fix]
       - id: ruff-format
         name: ruff format
-        entry: uv run ruff format
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy type checking
+        entry: bash -c 'source .venv/bin/activate && python -m mypy snowfakery_mcp'
         language: system
         types: [python]
-        stages: [pre-commit]
-      - id: ruff-check
-        name: ruff check
-        entry: uv run ruff check --fix
-        language: system
-        types: [python]
+        pass_filenames: false
+        require_serial: true
         stages: [pre-commit]
