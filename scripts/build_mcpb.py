@@ -207,7 +207,7 @@ if __name__ == "__main__":
             for file_path in tmpdir_path.rglob("*"):
                 if file_path.is_file():
                     arcname = file_path.relative_to(tmpdir_path)
-                    zf.write(file_path, arcname)
+                    zf.write(str(file_path), str(arcname))
 
     print(f"Created bundle: {output_path}")
     print(f"  Version: {resolved_version}")

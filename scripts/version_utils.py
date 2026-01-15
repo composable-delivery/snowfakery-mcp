@@ -167,7 +167,7 @@ def main() -> int:
             return 1
 
         elif args.command == "create":
-            return 0 if create_and_push_tag(args.tag, args.run_tests) else 1
+            return 0 if create_and_push_tag(args.tag) else 1
 
         elif args.command == "verify-wheel":
             return 0 if verify_wheel_version(args.wheel, args.expected) else 1
