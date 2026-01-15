@@ -19,7 +19,6 @@ import json
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import tomllib
 from importlib.metadata import PackageNotFoundError
@@ -164,32 +163,42 @@ if __name__ == "__main__":
         (server_dir / "main.py").write_text(entry_point)
         (server_dir / "main.py").chmod(0o755)
 
-        # 3. Bundle all dependencies using pip download
+        # 3. Bundle all runtime dependencies (including transitive) using uv + uv.lock
         print("Bundling Python dependencies...")
         lib_dir.mkdir(parents=True)
 
-        # Get dependencies from pyproject.toml
-        pyproject = root / "pyproject.toml"
-        pyproject_data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-        dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+        # Export locked runtime dependencies to a requirements file (exclude dev groups and the project itself).
+        req_path = tmpdir_path / "requirements.txt"
+        subprocess.run(
+            [
+                "uv",
+                "export",
+                "--frozen",
+                "--format",
+                "requirements.txt",
+                "--no-dev",
+                "--no-emit-project",
+                "--no-header",
+                "--no-annotate",
+                "--output-file",
+                str(req_path),
+            ],
+            check=True,
+        )
 
-        # Download all wheels to lib/
-        for dep in dependencies:
-            # Simple approach: use pip download
-            subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "download",
-                    "--destination-directory",
-                    str(lib_dir),
-                    "--no-deps",
-                    dep,
-                ],
-                check=True,
-                capture_output=True,
-            )
+        # Install the exported requirements into the bundle's lib/ directory.
+        subprocess.run(
+            [
+                "uv",
+                "pip",
+                "install",
+                "--requirements",
+                str(req_path),
+                "--target",
+                str(lib_dir),
+            ],
+            check=True,
+        )
 
         # 4. Create manifest.json
         manifest_path = tmpdir_path / "manifest.json"

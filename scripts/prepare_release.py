@@ -12,13 +12,21 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
+
+CmdPart = Union[str, Path]  # noqa: UP007
 
 
-def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    """Run a shell command."""
-    print(f"▶ {' '.join(cmd)}")
-    return subprocess.run(cmd, check=check, text=True)
+def run_command(cmd: Iterable[CmdPart], check: bool = True) -> subprocess.CompletedProcess:
+    """Run a shell command.
+
+    Accepts both strings and Paths (converted to strings) to avoid type errors.
+    """
+    cmd_list = [str(c) for c in cmd]
+    print(f"▶ {' '.join(cmd_list)}")
+    return subprocess.run(cmd_list, check=check, text=True)
 
 
 def generate_third_party_notices() -> None:
@@ -64,8 +72,8 @@ def prepare_pypi_dist() -> None:
     dist_dir = Path("pypi-dist")
     dist_dir.mkdir(exist_ok=True)
 
-    run_command(["cp"] + list(Path("dist").glob("*.whl")) + [str(dist_dir)])
-    run_command(["cp"] + list(Path("dist").glob("*.tar.gz")) + [str(dist_dir)])
+    run_command(["cp", *Path("dist").glob("*.whl"), dist_dir])
+    run_command(["cp", *Path("dist").glob("*.tar.gz"), dist_dir])
 
 
 def run_tests(ignore_snowfakery: bool = False) -> None:

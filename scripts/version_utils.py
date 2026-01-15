@@ -13,6 +13,7 @@ import argparse
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 
 def validate_tag(tag: str) -> bool:
@@ -40,12 +41,72 @@ def derive_version_from_tag(tag: str) -> str | None:
     return version
 
 
-def create_and_push_tag(tag: str) -> bool:
-    """Create and push a git tag."""
+def _update_version_file(version: str) -> bool:
+    """Update the version in snowfakery_mcp/__about__.py.
+
+    Returns True if the file was changed.
+    """
+
+    about_path = Path(__file__).resolve().parents[1] / "snowfakery_mcp" / "__about__.py"
+    if not about_path.exists():
+        print(f"❌ Missing version file: {about_path}", file=sys.stderr)
+        return False
+
+    content = about_path.read_text(encoding="utf-8")
+    new_content, count = re.subn(
+        r'^__version__\s*=\s*"[^"]+"\s*$',
+        f'__version__ = "{version}"',
+        content,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        print("❌ Could not update __version__ in __about__.py", file=sys.stderr)
+        return False
+
+    if new_content == content:
+        return False
+
+    about_path.write_text(new_content, encoding="utf-8")
+    return True
+
+
+def _git_is_detached_head() -> bool:
+    cp = subprocess.run(
+        ["git", "symbolic-ref", "--quiet", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return cp.returncode != 0
+
+
+def create_and_push_tag(tag: str, run_tests: bool = False) -> bool:
+    """Create and push a release commit (version bump) and tag.
+
+    This keeps the tag pointing at a commit whose packaged version matches the tag,
+    which makes wheel/sdist builds deterministic.
+    """
     if not validate_tag(tag):
         return False
 
     try:
+        if _git_is_detached_head():
+            print(
+                "❌ Refusing to create a release tag from detached HEAD.",
+                file=sys.stderr,
+            )
+            return False
+
+        version = derive_version_from_tag(tag)
+        if not version:
+            return False
+
+        if run_tests:
+            print("🧪 Running tests before tagging...")
+            subprocess.run(["uv", "run", "pytest", "--ignore=Snowfakery"], check=True)
+
+        changed = _update_version_file(version)
+
         # Configure git
         subprocess.run(
             ["git", "config", "user.name", "github-actions[bot]"],
@@ -55,6 +116,20 @@ def create_and_push_tag(tag: str) -> bool:
             ["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
             check=True,
         )
+
+        if changed:
+            subprocess.run(
+                ["git", "add", "snowfakery_mcp/__about__.py"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "-m", f"Release {tag}"],
+                check=True,
+            )
+            print("📤 Pushing release commit to origin")
+            subprocess.run(["git", "push", "origin", "HEAD"], check=True)
+        else:
+            print("ℹ️  Version file already matches; no commit created")
 
         # Check if tag already exists
         result = subprocess.run(
@@ -167,7 +242,7 @@ def main() -> int:
             return 1
 
         elif args.command == "create":
-            return 0 if create_and_push_tag(args.tag) else 1
+            return 0 if create_and_push_tag(args.tag, run_tests=args.run_tests) else 1
 
         elif args.command == "verify-wheel":
             return 0 if verify_wheel_version(args.wheel, args.expected) else 1
