@@ -42,8 +42,8 @@ This repo publishes releases via GitHub Actions.
 		- checkout submodules
 		- run tests
 		- build wheel + sdist (`uv build`)
-		- build an experimental `.mcpb` bundle (`scripts/build_mcpb.py`)
-		- attach `dist/*` + `release-assets/*` to a GitHub Release (release notes auto-generated)
+		- build a `.mcpb` bundle (via reusable `build-mcpb.yml` workflow)
+		- attach `dist/*` + `release-assets/*` + `mcpb/*` to a GitHub Release (release notes auto-generated)
 		- publish `dist/*.whl` + `dist/*.tar.gz` to PyPI via Trusted Publishing (tags only)
 
 ## Can I release via the GitHub UI?

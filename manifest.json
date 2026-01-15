@@ -1,0 +1,36 @@
+{
+  "manifest_version": "0.4",
+  "name": "snowfakery-mcp",
+  "display_name": "Snowfakery MCP Server",
+  "version": "0.0.2b1",
+  "description": "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes",
+  "author": {
+    "name": "Composable Delivery",
+    "url": "https://github.com/composable-delivery"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/composable-delivery/snowfakery-mcp.git"
+  },
+  "homepage": "https://github.com/composable-delivery/snowfakery-mcp",
+  "support": "https://github.com/composable-delivery/snowfakery-mcp/discussions",
+  "server": {
+    "type": "uv",
+    "entry_point": "snowfakery_mcp/server.py"
+  },
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.12,<3.14"
+    }
+  },
+  "keywords": [
+    "snowfakery",
+    "data-generation",
+    "testing",
+    "mcp",
+    "claude",
+    "recipes"
+  ],
+  "license": "MIT OR Apache-2.0"
+}

@@ -150,3 +150,7 @@ mcp: FastMCP = create_app()
 def run() -> None:
     """Run the MCP server (stdio transport by default)."""
     mcp.run()
+
+
+if __name__ == "__main__":
+    run()

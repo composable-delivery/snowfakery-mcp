@@ -3,8 +3,10 @@
 
 Handles:
 - Third-party notices generation
-- MCPB bundle creation
 - PyPI distribution preparation
+
+Note: MCPB bundle is now built by a separate GitHub Actions workflow
+(build-mcpb.yml) for better reusability across CI and release workflows.
 """
 
 from __future__ import annotations
@@ -83,8 +85,12 @@ def temporary_source_version(version: str):
         about_path.write_text(original, encoding="utf-8")
 
 
-def prepare_release_assets(version: str | None = None) -> None:
-    """Prepare release assets directory."""
+def prepare_release_assets() -> None:
+    """Prepare release assets directory.
+
+    Note: MCPB bundle is now built by a separate GitHub Actions workflow
+    (build-mcpb.yml) and is not included here.
+    """
     print("📦 Preparing release assets...")
 
     assets_dir = Path("release-assets")
@@ -94,17 +100,6 @@ def prepare_release_assets(version: str | None = None) -> None:
     notices_src = Path("THIRD_PARTY_NOTICES.md")
     if notices_src.exists():
         run_command(["cp", str(notices_src), str(assets_dir / "THIRD_PARTY_NOTICES.md")])
-
-    # Build MCPB bundle
-    mcpb_filename = "snowfakery-mcp-dev.mcpb"
-    if version:
-        mcpb_filename = f"snowfakery-mcp-{version}.mcpb"
-
-    print(f"🔗 Building MCPB bundle: {mcpb_filename}")
-    cmd = ["python", "scripts/build_mcpb.py", "--output", str(assets_dir / mcpb_filename)]
-    if version:
-        cmd.extend(["--version", version])
-    run_command(cmd)
 
 
 def prepare_pypi_dist(version: str | None = None) -> None:
@@ -184,7 +179,7 @@ def main() -> int:
         elif not args.skip_build:
             build_distributions()
 
-        prepare_release_assets(version=normalized_version)
+        prepare_release_assets()
         prepare_pypi_dist(version=normalized_version)
 
         print("✅ Release preparation complete!")
