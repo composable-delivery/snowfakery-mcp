@@ -1,6 +1,7 @@
 {
   "manifest_version": "0.4",
   "name": "snowfakery-mcp",
+  "mcpName": "io.github.composable-delivery/snowfakery-mcp",
   "display_name": "Snowfakery MCP Server",
   "version": "0.0.2b1",
   "description": "MCP server for authoring, analyzing, debugging, and running Snowfakery recipes",

@@ -305,3 +305,57 @@ jobs:
           # When using Trusted Publishing, no token is required.
           # Configure PyPI project "snowfakery-mcp" to trust this GitHub repo.
           packages-dir: dist
+
+  publish-mcp-registry:
+    name: Publish to MCP Registry
+    runs-on: ubuntu-latest
+    needs: [build, publish-pypi]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install mcp-publisher
+        run: |
+          # Download and install mcp-publisher CLI
+          # Using the pre-built binary for Linux
+          curl -fsSL https://github.com/modelcontextprotocol/mcp-publisher/releases/latest/download/mcp-publisher-linux-x64 -o mcp-publisher
+          chmod +x mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+          
+          # Verify installation
+          mcp-publisher --help
+
+      - name: Authenticate with MCP Registry
+        run: |
+          # Authenticate using GitHub token for CI/CD
+          # The GITHUB_TOKEN is automatically provided by GitHub Actions
+          export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          mcp-publisher login github
+
+      - name: Update server.json version
+        run: |
+          # Update version in server.json to match the release tag
+          VERSION="${{ needs.build.outputs.version }}"
+          
+          # Use jq for safer JSON manipulation if available, otherwise use sed
+          if command -v jq &> /dev/null; then
+            jq --arg version "$VERSION" '.version = $version | .packages[0].version = $version' server.json > server.json.tmp
+            mv server.json.tmp server.json
+          else
+            # Fallback to sed - update both version fields
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" server.json
+          fi
+          
+          echo "Updated server.json:"
+          cat server.json
+
+      - name: Publish to MCP Registry
+        run: |
+          mcp-publisher publish server.json
