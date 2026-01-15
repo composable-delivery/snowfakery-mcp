@@ -2888,7 +2888,6 @@ wheels = [
 
 [[package]]
 name = "snowfakery-mcp"
-version = "0.0.2.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },

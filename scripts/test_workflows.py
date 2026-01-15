@@ -17,7 +17,7 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("❌ PyYAML not found. Install with: pip install pyyaml")
+    print("❌ PyYAML not found. Install with: uv pip add pyyaml")
     sys.exit(1)
 
 

@@ -68,7 +68,7 @@ jobs:
 
       - name: Prepare release
         run: |
-          python scripts/prepare_release.py \
+          uv run python scripts/prepare_release.py \
             --skip-notices \
             --ignore-snowfakery
 
@@ -125,7 +125,7 @@ jobs:
 
       - name: Validate tag input
         run: |
-          python scripts/version_utils.py validate "${{ inputs.tag }}"
+          uv run python scripts/version_utils.py validate "${{ inputs.tag }}"
 
       - name: Run tests (if requested)
         if: inputs.run_tests
@@ -133,7 +133,7 @@ jobs:
 
       - name: Create and push tag
         run: |
-          python scripts/version_utils.py create "${{ inputs.tag }}"
+          uv run python scripts/version_utils.py create "${{ inputs.tag }}"
 
   build:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
@@ -171,7 +171,7 @@ jobs:
       - name: Derive version from tag
         id: version
         run: |
-          VERSION=$(python scripts/version_utils.py derive "${{ github.ref_name }}")
+          VERSION=$(uv run python scripts/version_utils.py derive "${{ github.ref_name }}")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Run tests
@@ -179,7 +179,7 @@ jobs:
 
       - name: Prepare release
         run: |
-          python scripts/prepare_release.py \
+          uv run python scripts/prepare_release.py \
             --version "${{ steps.version.outputs.version }}" \
             --skip-tests \
             --ignore-snowfakery
@@ -187,7 +187,7 @@ jobs:
       - name: Verify wheel version
         run: |
           WHEEL=$(ls dist/*.whl | head -1)
-          python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
+          uv run python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
 
       - name: Generate SBOM (SPDX JSON)
         uses: anchore/sbom-action@v0
