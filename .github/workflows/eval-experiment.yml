@@ -23,14 +23,16 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   models: read
+  pages: write
+  id-token: write
 
 jobs:
   eval:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       models: read
     
     steps:
@@ -38,6 +40,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Checkout Eval History
+        uses: actions/checkout@v4
+        with:
+          ref: eval-history
+          path: eval-history
+        continue-on-error: true # Branch might not exist yet
+
+      - name: Create History Directory
+        run: |
+          if [ ! -d "eval-history" ]; then
+            echo "Creating orphan branch structure for history..."
+            mkdir eval-history
+            cd eval-history
+            git init
+            git checkout -b eval-history
+            # dummy commit to allow switching
+            touch .gitkeep
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .gitkeep
+            git commit -m "Init history"
+          fi
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -61,21 +86,62 @@ jobs:
           SNOWFAKERY_MCP_MAX_TARGET_COUNT: "200"
           SNOWFAKERY_MCP_TIMEOUT_SECONDS: "60"
         run: |
+          mkdir -p logs
           uv run --group evals inspect eval evals/inspect_tasks.py@snowfakery_mcp_agentic \
             --model openai/${{ inputs.model }} \
             --limit ${{ inputs.iterations }} \
-            --log-dir logs
-
-      - name: Bundle HTML Report
-        run: |
-          uv run --group evals inspect view bundle \
             --log-dir logs \
+            -T commit=${{ github.sha }} \
+            -T branch=${{ github.ref_name }} \
+            -T run_id=${{ github.run_id }} \
+            -T actor=${{ github.actor }}
+
+      - name: Save Log to History
+        run: |
+          # Format: YYYY-MM-DD-HH-MM-model-uuid.eval
+          TIMESTAMP=$(date +'%Y-%m-%d-%H-%M')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          
+          # Move generated log(s) to history folder with rich naming
+          cd logs
+          for f in *.eval; do
+            # Name format: timestamp-model-branch-sha-runid.eval
+            # Accessing inputs.model again for the filename
+            MODEL_SAFE=$(echo "${{ inputs.model }}" | tr '/' '-')
+            cp "$f" "../eval-history/${TIMESTAMP}-${MODEL_SAFE}-${{ github.ref_name }}-${SHORT_SHA}-${{ github.run_id }}.eval"
+          done
+          cd ..
+          
+          # Commit and Push
+          cd eval-history
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Add eval log for ${{ inputs.model }} at ${TIMESTAMP}" || echo "No changes to commit"
+          # Handle race conditions with rebase
+          git pull --rebase origin eval-history || echo "Branch might be new, skipping pull"
+          git push origin eval-history || git push origin eval-history:eval-history
+
+      - name: Bundle HTML Report (All History)
+        run: |
+          # Generate the site from the ACCUMULATED history
+          uv run --group evals inspect view bundle \
+            --log-dir eval-history \
             --output-dir html_report \
             --overwrite
 
-      - name: Upload Eval Results
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: eval-results-${{ inputs.model }}
           path: html_report/
+
+  deploy:
+    needs: eval
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
