@@ -66,17 +66,16 @@ jobs:
             --limit ${{ inputs.iterations }} \
             --log-dir logs
 
-      - name: Generate HTML Report
+      - name: Bundle HTML Report
         run: |
-          # Find the most recent eval log
-          LOG_FILE=$(ls -t logs/*.eval | head -n 1)
-          uv run python evals/html_report.py "$LOG_FILE" "logs/report.html"
+          uv run --group evals inspect view bundle \
+            --log-dir logs \
+            --output-dir html_report \
+            --overwrite
 
       - name: Upload Eval Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eval-results-${{ inputs.model }}
-          path: |
-            logs/*.eval
-            logs/*.html
+          path: html_report/
