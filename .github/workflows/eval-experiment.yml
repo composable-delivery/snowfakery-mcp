@@ -24,12 +24,14 @@ on:
 
 permissions:
   contents: read
+  models: read
 
 jobs:
   eval:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      models: read
     
     steps:
       - name: Checkout repository
