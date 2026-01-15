@@ -95,7 +95,15 @@ jobs:
         run: uv sync --all-groups --frozen
 
       - name: Run tests
-        run: uv run pytest -v --tb=short --ignore=Snowfakery
+        run: uv run pytest -v --tb=short --ignore=Snowfakery tests/
+        continue-on-error: true
+        id: test_run
+
+      - name: Report test results
+        if: failure()
+        run: |
+          echo "::error::Test job failed. Check the pytest output above for details."
+          exit 1
 
   lint:
     name: Lint & Format

@@ -19,11 +19,15 @@ evals = ["inspect-ai>=0.3.160"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+norecursedirs = ["Snowfakery", ".venv", "dist", "build", "*.egg"]
 asyncio_mode = "auto"
 markers = [
     "anyio: async integration tests",
     "integration: integration tests",
     "unit: unit tests",
+    "slow: marks tests as slow",
 ]
 
 [tool.coverage.run]
