@@ -45,6 +45,7 @@ This repo publishes releases via GitHub Actions.
 		- build a `.mcpb` bundle (via reusable `build-mcpb.yml` workflow)
 		- attach `dist/*` + `release-assets/*` + `mcpb/*` to a GitHub Release (release notes auto-generated)
 		- publish `dist/*.whl` + `dist/*.tar.gz` to PyPI via Trusted Publishing (tags only)
+		- publish server metadata to MCP Registry (tags only)
 
 ## Can I release via the GitHub UI?
 
@@ -100,3 +101,13 @@ If you pushed a bad tag and need to redo it:
 
 The publish job uses OIDC Trusted Publishing (`pypa/gh-action-pypi-publish`). If PyPI isn’t configured to trust this GitHub repo/environment yet, the publish step will fail.
 
+
+### MCP Registry Publishing
+
+The release workflow automatically publishes server metadata to the MCP Registry after a successful PyPI publish. This uses:
+
+- **server.json**: Contains the MCP Registry metadata (name, description, packages, etc.)
+- **manifest.json**: Contains the `mcpName` field that matches the server name in `server.json`
+- **GitHub authentication**: Uses the `GITHUB_TOKEN` to authenticate with the MCP Registry
+
+The server is published under the namespace `io.github.composable-delivery/snowfakery-mcp`, which is verified against the GitHub organization ownership.

@@ -323,20 +323,33 @@ jobs:
 
       - name: Install mcp-publisher
         run: |
-          # Download and install mcp-publisher CLI
-          # Using the pre-built binary for Linux
-          curl -fsSL https://github.com/modelcontextprotocol/mcp-publisher/releases/latest/download/mcp-publisher-linux-x64 -o mcp-publisher
-          chmod +x mcp-publisher
-          sudo mv mcp-publisher /usr/local/bin/
+          # Install mcp-publisher CLI
+          # The installation method may vary - check MCP documentation for updates
+          # Option 1: Try npm installation (if available)
+          if npm view mcp-publisher version 2>/dev/null; then
+            npm install -g mcp-publisher
+          # Option 2: Try @modelcontextprotocol scope
+          elif npm view @modelcontextprotocol/mcp-publisher version 2>/dev/null; then
+            npm install -g @modelcontextprotocol/mcp-publisher
+          # Option 3: Try downloading pre-built binary
+          else
+            echo "Attempting to download pre-built binary..."
+            curl -fsSL -o mcp-publisher https://static.modelcontextprotocol.io/mcp-publisher/latest/linux-x64 || \
+              curl -fsSL -o mcp-publisher https://github.com/modelcontextprotocol/mcp-publisher/releases/latest/download/mcp-publisher-linux-x64 || \
+              (echo "ERROR: Could not install mcp-publisher. Please update workflow with correct installation method." && exit 1)
+            chmod +x mcp-publisher
+            sudo mv mcp-publisher /usr/local/bin/
+          fi
           
           # Verify installation
-          mcp-publisher --help
+          mcp-publisher --help || mcp-publisher --version
 
       - name: Authenticate with MCP Registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Authenticate using GitHub token for CI/CD
-          # The GITHUB_TOKEN is automatically provided by GitHub Actions
-          export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          # The mcp-publisher uses GITHUB_TOKEN environment variable
           mcp-publisher login github
 
       - name: Update server.json version
