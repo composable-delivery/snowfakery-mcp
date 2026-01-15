@@ -55,7 +55,12 @@ coverage.xml
 *.py.cover
 .hypothesis/
 .pytest_cache/
+
+# Project specific
+.tmp/
 cover/
+pypi-dist/
+release-assets/
 
 # Translations
 *.mo
