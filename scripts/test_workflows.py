@@ -25,7 +25,7 @@ def validate_yaml(file_path: Path) -> bool:
     """Validate YAML syntax."""
     print(f"🔍 Validating YAML: {file_path.name}")
     try:
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             yaml.safe_load(f)
         print(f"✅ YAML valid: {file_path.name}")
         return True
@@ -41,6 +41,7 @@ def check_script_directly(script_path: str) -> bool:
         result = subprocess.run(
             ["python", script_path, "--help"],
             capture_output=True,
+            check=False,
             text=True,
             timeout=10,
         )
@@ -52,7 +53,7 @@ def check_script_directly(script_path: str) -> bool:
             if result.stderr:
                 print(f"   Error: {result.stderr[:200]}")
             return False
-    except Exception as e:
+    except (OSError, subprocess.TimeoutExpired) as e:
         print(f"❌ Error testing {script_path}: {e}")
         return False
 
@@ -87,6 +88,7 @@ def check_scripts() -> bool:
     scripts = [
         "scripts/version_utils.py",
         "scripts/prepare_release.py",
+        "scripts/update_mcp_metadata.py",
     ]
 
     all_working = True
@@ -149,7 +151,7 @@ def main() -> int:
             print("\n❌ Some validation checks failed")
             return 1
 
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"❌ Fatal error: {e}")
         return 1
 

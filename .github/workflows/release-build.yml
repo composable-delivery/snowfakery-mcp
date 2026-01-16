@@ -1,0 +1,100 @@
+name: Release Build
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Derived release version (PEP 440)
+        value: ${{ jobs.build.outputs.version }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Cache uv
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          VERSION=$(uv run python scripts/version_utils.py derive "${{ github.ref_name }}")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests
+        run: uv run pytest --ignore=Snowfakery
+
+      - name: Prepare release
+        run: |
+          uv run python scripts/prepare_release.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --skip-tests \
+            --ignore-snowfakery
+
+      - name: Verify wheel version
+        run: |
+          WHEEL=$(ls dist/snowfakery_mcp-${{ steps.version.outputs.version }}-*.whl | head -1)
+          uv run python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
+
+      - name: Generate SBOM (SPDX JSON)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: release-assets/sbom.spdx.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            dist/*
+            release-assets/*
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v3
+        with:
+          sbom-path: release-assets/sbom.spdx.json
+          subject-path: |
+            dist/*
+            release-assets/*
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-assets
+          path: release-assets
+          if-no-files-found: error
+
+      - name: Upload PyPI dist
+        uses: actions/upload-artifact@v6
+        with:
+          name: pypi-dist
+          path: pypi-dist
+          if-no-files-found: error

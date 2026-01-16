@@ -40,14 +40,17 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
       - name: Install mcpb CLI
         run: npm install -g @anthropic-ai/mcpb
 
       - name: Update manifest version
         run: |
-          # Update version in manifest.json
-          jq --arg v "${{ inputs.version }}" '.version = $v' manifest.json > manifest.tmp.json
-          mv manifest.tmp.json manifest.json
+          python scripts/update_mcp_metadata.py "${{ inputs.version }}" --skip-server-json
           cat manifest.json
 
       - name: Build MCPB bundle
@@ -86,7 +89,7 @@ jobs:
           BUNDLE_PATH="${{ steps.pack.outputs.bundle-path }}"
 
           # Verify manifest exists and is valid JSON
-          unzip -p "${BUNDLE_PATH}" manifest.json | jq .
+          unzip -p "${BUNDLE_PATH}" manifest.json | python -m json.tool > /dev/null
 
           # Verify key files exist
           unzip -l "${BUNDLE_PATH}" | grep -q "pyproject.toml" || (echo "Missing pyproject.toml" && exit 1)

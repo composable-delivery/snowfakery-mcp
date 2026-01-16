@@ -1,0 +1,56 @@
+name: Run Python + uv Command
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version to use
+        required: false
+        type: string
+        default: "3.12"
+      command:
+        description: Shell command(s) to run after uv sync
+        required: true
+        type: string
+      timeout-minutes:
+        description: Job timeout in minutes
+        required: false
+        type: number
+        default: 20
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Cache uv
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py${{ inputs.python-version }}-
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Run
+        shell: bash
+        run: ${{ inputs.command }}
