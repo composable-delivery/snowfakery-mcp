@@ -8,6 +8,10 @@
 
 **Power up your AI workflows with Snowfakery data generation** — Use Claude, ChatGPT, and other AI assistants to author, debug, and run data recipes through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
+## MCP Registry
+
+mcp-name: io.github.composable-delivery/snowfakery-mcp
+
 ## What is this?
 
 [Snowfakery](https://github.com/SFDO-Tooling/Snowfakery) is a YAML-based tool for programmatically generating test data. This MCP server connects Snowfakery to AI assistants, letting you:
