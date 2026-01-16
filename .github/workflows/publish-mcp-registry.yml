@@ -7,6 +7,10 @@ on:
         description: Version to publish (PEP 440)
         required: true
         type: string
+    secrets:
+      MCP_GITHUB_TOKEN:
+        description: Optional GitHub PAT for MCP Registry publishing (read:org, read:user)
+        required: false
 
 jobs:
   publish:
@@ -21,26 +25,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install mcp-publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-          chmod +x mcp-publisher
-
-      - name: Authenticate to MCP Registry (GitHub OIDC)
-        if: ${{ secrets.MCP_GITHUB_TOKEN == '' }}
-        run: ./mcp-publisher login github-oidc
-
-      - name: Authenticate to MCP Registry (GitHub PAT)
-        if: ${{ secrets.MCP_GITHUB_TOKEN != '' }}
-        run: ./mcp-publisher login github --token "${{ secrets.MCP_GITHUB_TOKEN }}"
-
-      - name: Update MCP metadata versions
-        run: python scripts/update_mcp_metadata.py "${{ inputs.version }}"
-
       - name: Publish to MCP Registry
-        run: ./mcp-publisher publish
+        uses: ./.github/actions/publish-mcp-registry
+        with:
+          version: ${{ inputs.version }}
+          github-token: ${{ secrets.MCP_GITHUB_TOKEN }}

@@ -1,0 +1,93 @@
+name: Publish MCP Registry
+description: Publish an MCP server to the MCP Registry using GitHub OIDC (default) or an optional GitHub PAT.
+
+inputs:
+  version:
+    description: Version to set in server.json/manifest.json before publishing (PEP 440)
+    required: true
+  github-token:
+    description: Optional GitHub PAT for MCP Registry auth (requires read:org and read:user). If omitted, uses GitHub OIDC.
+    required: false
+    default: ""
+  python-version:
+    description: Python version for JSON update steps
+    required: false
+    default: "3.12"
+  server-json-path:
+    description: Path to server.json
+    required: false
+    default: "server.json"
+  manifest-json-path:
+    description: Path to manifest.json
+    required: false
+    default: "manifest.json"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install mcp-publisher
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+        chmod +x mcp-publisher
+
+    - name: Authenticate to MCP Registry
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "${{ inputs.github-token }}" ]; then
+          ./mcp-publisher login github --token "${{ inputs.github-token }}"
+        else
+          ./mcp-publisher login github-oidc
+        fi
+
+    - name: Update MCP metadata versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        python - <<'PY'
+        import json
+        from pathlib import Path
+
+        version = "${{ inputs.version }}"
+        server_path = Path("${{ inputs.server-json-path }}")
+        manifest_path = Path("${{ inputs.manifest-json-path }}")
+
+        def write_json(path: Path, payload: object) -> None:
+            path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+        # server.json is required for MCP Registry publishing
+        if not server_path.exists():
+            raise SystemExit(f"ERROR: Missing required file: {server_path}")
+
+        server = json.loads(server_path.read_text(encoding="utf-8"))
+        if not isinstance(server, dict):
+            raise SystemExit(f"ERROR: Expected object at top-level: {server_path}")
+
+        server["version"] = version
+        packages = server.get("packages")
+        if isinstance(packages, list):
+            for pkg in packages:
+                if isinstance(pkg, dict):
+                    pkg["version"] = version
+        write_json(server_path, server)
+
+        # manifest.json is optional
+        if manifest_path.exists():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(manifest, dict):
+                manifest["version"] = version
+                write_json(manifest_path, manifest)
+        PY
+
+    - name: Publish to MCP Registry
+      shell: bash
+      run: |
+        set -euo pipefail
+        ./mcp-publisher publish

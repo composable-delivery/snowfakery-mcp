@@ -29,6 +29,6 @@ body:
     id: env
     attributes:
       label: Environment
-      description: OS, Python version, and how you installed (pipx/PyPI/from source).
+      description: OS, Python version, and how you installed (uv tool / PyPI / from source).
     validations:
       required: true

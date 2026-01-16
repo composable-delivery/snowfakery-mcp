@@ -117,3 +117,4 @@ jobs:
     uses: ./.github/workflows/publish-mcp-registry.yml
     with:
       version: ${{ needs.build.outputs.version }}
+    secrets: inherit
