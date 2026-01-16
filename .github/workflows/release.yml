@@ -35,197 +35,21 @@ jobs:
   dry-run:
     name: Build (dry run)
     if: github.event_name == 'workflow_dispatch' && !inputs.create_tag
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Prepare release
-        run: |
-          uv run python scripts/prepare_release.py \
-            --skip-notices \
-            --ignore-snowfakery
-
-      - name: Upload release assets
-        uses: actions/upload-artifact@v6
-        with:
-          name: release-assets
-          path: release-assets
-          if-no-files-found: error
-
-      - name: Upload PyPI dist
-        uses: actions/upload-artifact@v6
-        with:
-          name: pypi-dist
-          path: pypi-dist
-          if-no-files-found: error
+    uses: ./.github/workflows/release-dry-run.yml
 
   tag:
     name: Create release tag (manual)
     if: github.event_name == 'workflow_dispatch' && inputs.create_tag
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
     permissions:
       contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Validate tag input
-        run: |
-          uv run python scripts/version_utils.py validate "${{ inputs.tag }}"
-
-      - name: Run tests (if requested)
-        if: inputs.run_tests
-        run: uv run pytest --ignore=Snowfakery
-
-      - name: Create and push tag
-        run: |
-          uv run python scripts/version_utils.py create "${{ inputs.tag }}"
+    uses: ./.github/workflows/release-tag.yml
+    with:
+      tag: ${{ inputs.tag }}
+      run_tests: ${{ inputs.run_tests }}
 
   build:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Derive version from tag
-        id: version
-        run: |
-          VERSION=$(uv run python scripts/version_utils.py derive "${{ github.ref_name }}")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Run tests
-        run: uv run pytest --ignore=Snowfakery
-
-      - name: Prepare release
-        run: |
-          uv run python scripts/prepare_release.py \
-            --version "${{ steps.version.outputs.version }}" \
-            --skip-tests \
-            --ignore-snowfakery
-
-      - name: Verify wheel version
-        run: |
-          WHEEL=$(ls dist/snowfakery_mcp-${{ steps.version.outputs.version }}-*.whl | head -1)
-          uv run python scripts/version_utils.py verify-wheel "$WHEEL" "${{ steps.version.outputs.version }}"
-
-      - name: Generate SBOM (SPDX JSON)
-        uses: anchore/sbom-action@v0
-        with:
-          path: .
-          format: spdx-json
-          output-file: release-assets/sbom.spdx.json
-
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: |
-            dist/*
-            release-assets/*
-
-      - name: Attest SBOM
-        uses: actions/attest-sbom@v3
-        with:
-          sbom-path: release-assets/sbom.spdx.json
-          subject-path: |
-            dist/*
-            release-assets/*
-
-      - name: Upload release assets
-        uses: actions/upload-artifact@v6
-        with:
-          name: release-assets
-          path: release-assets
-          if-no-files-found: error
-
-      - name: Upload PyPI dist
-        uses: actions/upload-artifact@v6
-        with:
-          name: pypi-dist
-          path: pypi-dist
-          if-no-files-found: error
+    uses: ./.github/workflows/release-build.yml
 
   # Build MCPB bundle for release
   mcpb:
@@ -282,117 +106,14 @@ jobs:
             mcpb/*
 
   publish-pypi:
-    runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    timeout-minutes: 20
-    environment: pypi
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download dist artifacts
-        uses: actions/download-artifact@v7
-        with:
-          name: pypi-dist
-          path: dist
-
-      - name: Publish to PyPI (Trusted Publishing)
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # When using Trusted Publishing, no token is required.
-          # Configure PyPI project "snowfakery-mcp" to trust this GitHub repo.
-          packages-dir: dist
+    uses: ./.github/workflows/publish-pypi.yml
 
   publish-mcp-registry:
     name: Publish to MCP Registry
-    runs-on: ubuntu-latest
     needs: [build, publish-pypi]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    timeout-minutes: 20
-
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Install mcp-publisher
-        run: |
-          # Install mcp-publisher CLI
-          # NOTE: The exact installation method should be verified against MCP documentation
-          # This script tries multiple approaches to maximize compatibility
-          
-          # Option 1: Try npm installation (if available)
-          if npm view mcp-publisher version 2>/dev/null; then
-            echo "Installing mcp-publisher from npm..."
-            npm install -g mcp-publisher
-          # Option 2: Try @modelcontextprotocol scope
-          elif npm view @modelcontextprotocol/mcp-publisher version 2>/dev/null; then
-            echo "Installing @modelcontextprotocol/mcp-publisher from npm..."
-            npm install -g @modelcontextprotocol/mcp-publisher
-          # Option 3: Try downloading pre-built binary
-          else
-            echo "Attempting to download pre-built binary..."
-            curl -fsSL -o mcp-publisher https://static.modelcontextprotocol.io/mcp-publisher/latest/linux-x64 || \
-              curl -fsSL -o mcp-publisher https://github.com/modelcontextprotocol/mcp-publisher/releases/latest/download/mcp-publisher-linux-x64 || \
-              (echo "ERROR: Could not install mcp-publisher. Please update workflow with correct installation method." && exit 1)
-            chmod +x mcp-publisher
-            sudo mv mcp-publisher /usr/local/bin/
-          fi
-          
-          # Verify installation
-          if ! mcp-publisher --help 2>/dev/null && ! mcp-publisher --version 2>/dev/null; then
-            echo "ERROR: mcp-publisher installation verification failed"
-            exit 1
-          fi
-          echo "mcp-publisher installed successfully"
-
-      - name: Restore MCP Registry credentials
-        run: |
-          # The mcp-publisher login github command uses an interactive OAuth device flow
-          # which doesn't work in CI/CD. Instead, we restore pre-authenticated credentials.
-          # 
-          # To set up:
-          # 1. Run locally: mcp-publisher login github
-          # 2. Find the credentials file (typically in ~/.mcp-publisher/ or ~/.config/mcp-publisher/)
-          # 3. Store the credentials as a GitHub Actions secret named MCP_REGISTRY_CREDENTIALS
-          # 4. The workflow will restore them here before publishing
-          
-          mkdir -p ~/.mcp-publisher
-          echo "${{ secrets.MCP_REGISTRY_CREDENTIALS }}" > ~/.mcp-publisher/credentials.json
-          chmod 600 ~/.mcp-publisher/credentials.json
-          
-          # Verify credentials file exists
-          if [ ! -f ~/.mcp-publisher/credentials.json ]; then
-            echo "ERROR: MCP Registry credentials not found"
-            echo "Please set up MCP_REGISTRY_CREDENTIALS secret in GitHub Actions"
-            exit 1
-          fi
-
-      - name: Update server.json version
-        run: |
-          # Update version in server.json to match the release tag
-          VERSION="${{ needs.build.outputs.version }}"
-          
-          # Use jq for safer JSON manipulation if available, otherwise use sed
-          if command -v jq &> /dev/null; then
-            jq --arg version "$VERSION" '.version = $version | .packages[0].version = $version' server.json > server.json.tmp
-            mv server.json.tmp server.json
-          else
-            # Fallback to sed - update both version fields
-            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" server.json
-          fi
-          
-          echo "Updated server.json:"
-          cat server.json
-
-      - name: Publish to MCP Registry
-        run: |
-          # Publish server.json to MCP Registry
-          # NOTE: The exact publish command should be verified against mcp-publisher documentation
-          mcp-publisher publish server.json
+    uses: ./.github/workflows/publish-mcp-registry.yml
+    with:
+      version: ${{ needs.build.outputs.version }}

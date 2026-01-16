@@ -15,150 +15,43 @@ permissions:
 jobs:
   test:
     name: Test (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    uses: ./.github/workflows/run-python-uv.yml
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.13"]
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py${{ matrix.python-version }}-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Run tests
-        run: uv run pytest -v --cov=snowfakery_mcp --cov-report=term-missing --cov-report=xml --ignore=Snowfakery tests/
+    with:
+      python-version: ${{ matrix.python-version }}
+      timeout-minutes: 20
+      command: |
+        uv run pytest -v --cov=snowfakery_mcp --cov-report=term-missing --cov-report=xml --ignore=Snowfakery tests/
 
   lint:
     name: Lint & Format
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Lint with Ruff
-        run: uv run ruff check snowfakery_mcp tests scripts
-
-      - name: Format check with Ruff
-        run: uv run ruff format --check snowfakery_mcp tests scripts
+    uses: ./.github/workflows/run-python-uv.yml
+    with:
+      python-version: "3.12"
+      timeout-minutes: 15
+      command: |
+        uv run ruff check snowfakery_mcp tests scripts
+        uv run ruff format --check snowfakery_mcp tests scripts
 
   typecheck:
     name: Type Check (mypy)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Type check with mypy
-        run: uv run mypy snowfakery_mcp
+    uses: ./.github/workflows/run-python-uv.yml
+    with:
+      python-version: "3.12"
+      timeout-minutes: 15
+      command: uv run mypy snowfakery_mcp
 
   compliance:
     name: Compliance Checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: latest
-
-      - name: Cache uv
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py3.12-
-
-      - name: Install dependencies
-        run: uv sync --all-groups --frozen
-
-      - name: Check third-party notices
-        run: uv run python scripts/generate_third_party_notices.py --check
+    uses: ./.github/workflows/run-python-uv.yml
+    with:
+      python-version: "3.12"
+      timeout-minutes: 15
+      command: uv run python scripts/generate_third_party_notices.py --check
 
   # Build MCPB bundle for testing
   mcpb:

@@ -1,21 +1,28 @@
-name: Setup Python Environment
+name: Release Tag
 
 on:
   workflow_call:
-    outputs:
-      python-version:
-        description: Python version used
-        value: "3.12"
+    inputs:
+      tag:
+        description: Release tag (e.g. v0.2.0)
+        required: true
+        type: string
+      run_tests:
+        description: Run tests before creating the tag
+        required: false
+        type: boolean
+        default: true
 
 jobs:
-  setup:
+  tag:
     runs-on: ubuntu-latest
-    outputs:
-      python-version: ${{ steps.version.outputs.python-version }}
+    timeout-minutes: 20
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python
@@ -36,17 +43,15 @@ jobs:
           restore-keys: |
             uv-${{ runner.os }}-py3.12-
 
-      - name: Restore venv cache
-        uses: actions/cache@v5
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            venv-${{ runner.os }}-py3.12-
-
       - name: Install dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Set version output
-        id: version
-        run: echo "python-version=3.12" >> "$GITHUB_OUTPUT"
+      - name: Validate tag input
+        run: uv run python scripts/version_utils.py validate "${{ inputs.tag }}"
+
+      - name: Run tests (if requested)
+        if: inputs.run_tests
+        run: uv run pytest --ignore=Snowfakery
+
+      - name: Create and push tag
+        run: uv run python scripts/version_utils.py create "${{ inputs.tag }}"
