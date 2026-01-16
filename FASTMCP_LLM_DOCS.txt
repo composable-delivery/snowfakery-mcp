@@ -1,3 +1,8 @@
+# NOTE
+# This file is a vendored snapshot of upstream FastMCP documentation.
+# It may include installation commands that use pip/pipx.
+# For this repository, prefer using `uv` for installs and running tools.
+
 # Changelog
 Source: https://gofastmcp.com/changelog
 

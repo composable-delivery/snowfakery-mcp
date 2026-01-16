@@ -21,12 +21,10 @@ $ snowfakery somefile.yml
 
 ### Installation for Non-Salesforce Users
 
-If you are _not_ interested in using Snowfakery with Salesforce, directly install Snowfakery via [pipx](https://pypa.github.io/pipx/installation/).
+If you are _not_ interested in using Snowfakery with Salesforce, we recommend installing Snowfakery via `uv`.
 
 ```s
-$ pip3 install pipx
-...
-$ pipx install snowfakery
+$ uv tool install snowfakery
 ...
 ```
 
@@ -994,11 +992,11 @@ Snowfakery can validate recipes before generating data, catching errors like typ
 
 ### Validation Modes
 
-| Mode | Flag | Behavior |
-|------|------|----------|
-| **Default** | (none) | No validation; generate data immediately |
-| **Strict** | `--strict-mode` | Validate first, then generate if no errors |
-| **Validate Only** | `--validate-only` | Validate and exit; no data generation |
+| Mode              | Flag              | Behavior                                   |
+| ----------------- | ----------------- | ------------------------------------------ |
+| **Default**       | (none)            | No validation; generate data immediately   |
+| **Strict**        | `--strict-mode`   | Validate first, then generate if no errors |
+| **Validate Only** | `--validate-only` | Validate and exit; no data generation      |
 
 ### Example
 
@@ -1879,8 +1877,7 @@ To learn more about using Snowfakery in Python, see [Embedding Snowfakery into P
 
 Snowfakery is built on top of a very flexible engine called SQLAlchemy. This engine lets it connect to many different databases subject to the limitations described in this section.
 
-First, install Snowfakery in a context that makes it easy to use the Python command `pip` to manage your Python environment. For example, you can install Python
-using the standard installers from `python.org`, and then run these commands to create and use a `venv` with the Postgres package.
+First, install Snowfakery in a context that makes it easy to manage isolated dependencies. We recommend using `uv`.
 
 ```bash
 
@@ -1891,16 +1888,8 @@ $ cd experiment_with_postgres
 # create a new database:
 # https://www.postgresql.org/docs/9.1/app-createdb.html
 $ createdb snowfakerydb
-# create a virtual environment. A good habit to get into.
-# https://docs.python.org/3/library/venv.html
-$ python3 -m venv myvenv
-# activate the venv
-$ source myvenv/bin/activate
-# install Snowfakery in this venv
-$ pip install snowfakery
-# install the Postgres library for Python
-# https://pypi.org/project/psycopg2/
-$ pip install psycopg2
+# Install Snowfakery and the Postgres library for Python into an isolated environment.
+$ uv tool install snowfakery --with psycopg2
 # let's use it!
 $ snowfakery --dburl='postgresql://localhost:5432/snowfakerydb' examples/company.yml --target-number 1000 Employee
 # and check the results

@@ -24,8 +24,10 @@ jobs:
     with:
       python-version: ${{ matrix.python-version }}
       timeout-minutes: 20
+      upload-coverage: ${{ matrix.python-version == '3.12' }}
       command: |
         uv run pytest -v --cov=snowfakery_mcp --cov-report=term-missing --cov-report=xml --ignore=Snowfakery tests/
+    secrets: inherit
 
   lint:
     name: Lint & Format

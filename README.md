@@ -1,5 +1,11 @@
 # Snowfakery MCP Server
 
+[![CI](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/ci.yml)
+[![Release](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/release.yml)
+[![PyPI](https://img.shields.io/pypi/v/snowfakery-mcp.svg)](https://pypi.org/project/snowfakery-mcp/)
+[![Codecov](https://codecov.io/gh/composable-delivery/snowfakery-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/composable-delivery/snowfakery-mcp)
+[![License](https://img.shields.io/github/license/composable-delivery/snowfakery-mcp.svg)](LICENSE-MIT)
+
 **Power up your AI workflows with Snowfakery data generation** — Use Claude, ChatGPT, and other AI assistants to author, debug, and run data recipes through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
 ## What is this?
@@ -16,11 +22,38 @@ Perfect for teams that need realistic test data—from Salesforce admins to deve
 
 ## Quick Start
 
-### Install & Run
+### Install `uv`
+
+We recommend using `uv` for installs and for running from source.
+
+- Install `uv` (macOS/Linux):
+
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+- Install `uv` (Windows PowerShell):
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+
+See the official `uv` install docs: <https://docs.astral.sh/uv/getting-started/installation/>
+
+### Claude Desktop (recommended)
+
+For Claude Desktop, prefer using the `.mcpb` bundle from Releases:
+
+- Download the latest `.mcpb` from <https://github.com/composable-delivery/snowfakery-mcp/releases>
+- Add the bundle in Claude Desktop as an MCP server bundle
+
+This bundle includes the pinned runtime metadata (`uv.lock`, `manifest.json`) and is the easiest way to get a reproducible setup.
+
+### Install & Run (CLI)
 
 ```bash
 # Recommended: isolated install
-pipx install snowfakery-mcp
+uv tool install snowfakery-mcp
 
 # Then run the server
 snowfakery-mcp
@@ -55,11 +88,13 @@ Then ask Claude:
 ## Features
 
 **Resources** — Access docs, examples, and schemas:
+
 - Snowfakery documentation and recipe examples
 - JSON schema for recipe validation
 - Run outputs and artifacts
 
 **Tools** — Interact with recipes:
+
 - Validate & analyze recipes (catch errors early)
 - Run recipes and capture output
 - List & retrieve example recipes
@@ -119,4 +154,4 @@ See [evals/](evals/) for more examples and troubleshooting.
 
 ## Releases
 
-See [GitHub Releases](https://github.com/composable-delivery/snowfakery-mcp/releases) for sdist, wheel, and experimental `.mcpb` bundles.
+See [GitHub Releases](https://github.com/composable-delivery/snowfakery-mcp/releases) for sdist, wheel, and `.mcpb` bundles (recommended for Claude Desktop).

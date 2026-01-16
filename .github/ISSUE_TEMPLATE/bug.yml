@@ -34,7 +34,7 @@ body:
     attributes:
       label: Environment
       description: OS, Python version, and whether you ran from a release or from source
-      placeholder: "macOS 13.4, Python 3.11, pipx install"
+      placeholder: "macOS 13.4, Python 3.12, uv tool install"
   - type: textarea
     id: logs
     attributes:

@@ -17,6 +17,20 @@ on:
         required: false
         type: number
         default: 20
+      upload-coverage:
+        description: Upload coverage to Codecov (requires coverage.xml and optionally CODECOV_TOKEN)
+        required: false
+        type: boolean
+        default: false
+      coverage-files:
+        description: Coverage file(s) to upload (passed to Codecov action)
+        required: false
+        type: string
+        default: "coverage.xml"
+    secrets:
+      CODECOV_TOKEN:
+        description: Optional Codecov token (required for private repos)
+        required: false
 
 jobs:
   run:
@@ -54,3 +68,11 @@ jobs:
       - name: Run
         shell: bash
         run: ${{ inputs.command }}
+
+      - name: Upload coverage to Codecov
+        if: ${{ inputs.upload-coverage }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: ${{ inputs.coverage-files }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
