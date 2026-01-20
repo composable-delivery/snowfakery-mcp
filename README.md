@@ -1,9 +1,7 @@
 # Snowfakery MCP Server
 
 [![CI](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/ci.yml)
-[![Release](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/composable-delivery/snowfakery-mcp/actions/workflows/release.yml)
 [![PyPI](https://img.shields.io/pypi/v/snowfakery-mcp.svg)](https://pypi.org/project/snowfakery-mcp/)
-[![Codecov](https://codecov.io/gh/composable-delivery/snowfakery-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/composable-delivery/snowfakery-mcp)
 [![License](https://img.shields.io/github/license/composable-delivery/snowfakery-mcp.svg)](LICENSE-MIT)
 
 **Power up your AI workflows with Snowfakery data generation** — Use Claude, ChatGPT, and other AI assistants to author, debug, and run data recipes through the [Model Context Protocol](https://modelcontextprotocol.io/).
