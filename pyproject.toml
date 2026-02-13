@@ -72,12 +72,7 @@ packages = ["snowfakery_mcp"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "snowfakery_mcp/schema/*.py",
-    "snowfakery_mcp/schema/*.json",
-    "snowfakery_mcp/bundled_docs/**/*.py",
-    "snowfakery_mcp/bundled_docs/**/*.md",
-    "snowfakery_mcp/bundled_examples/**/*.py",
-    "snowfakery_mcp/bundled_examples/**/*.yml",
+    "snowfakery_mcp/",
     "README.md",
     "MCP_SERVER_SPEC.md",
     "RELEASE.md",
