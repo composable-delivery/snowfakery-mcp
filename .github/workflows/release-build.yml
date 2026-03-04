@@ -78,7 +78,7 @@ jobs:
             release-assets/*
 
       - name: Attest SBOM
-        uses: actions/attest-sbom@v3
+        uses: actions/attest-sbom@v4
         with:
           sbom-path: release-assets/sbom.spdx.json
           subject-path: |
