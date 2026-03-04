@@ -86,14 +86,14 @@ jobs:
             release-assets/*
 
       - name: Upload release assets
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-assets
           path: release-assets
           if-no-files-found: error
 
       - name: Upload PyPI dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pypi-dist
           path: pypi-dist

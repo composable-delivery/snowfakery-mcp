@@ -99,7 +99,7 @@ jobs:
           echo "✅ Bundle structure verified"
 
       - name: Upload MCPB artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name }}
           path: ${{ steps.pack.outputs.bundle-path }}
