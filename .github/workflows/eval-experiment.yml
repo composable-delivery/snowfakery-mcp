@@ -37,12 +37,12 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
 
       - name: Checkout Eval History
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: eval-history
           path: eval-history
