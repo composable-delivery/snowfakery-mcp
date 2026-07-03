@@ -36,6 +36,19 @@ uv run ruff check snowfakery_mcp tests scripts evals
 uv run ruff format snowfakery_mcp tests scripts evals
 ```
 
+### Local development
+
+FastMCP's CLI ships as a command group (`fastmcp dev apps|inspector`, not a bare
+`fastmcp dev <server-spec>` like older 2.x versions). To interactively exercise the
+server's tools, resources, and prompts against the MCP Inspector while developing:
+
+```bash
+uv run fastmcp dev inspector snowfakery_mcp/server.py:mcp
+```
+
+This launches the MCP Inspector UI and connects it to the `mcp` `FastMCP` instance in
+`snowfakery_mcp/server.py`, auto-reloading on file changes.
+
 ### Important: Git submodule
 
 This repo vendors Snowfakery as a git submodule (`Snowfakery/`). When developing:

@@ -10,40 +10,53 @@ from __future__ import annotations
 
 from importlib.resources.abc import Traversable
 from pathlib import Path
-from typing import Any
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
+from mcp.types import ToolAnnotations
 
 from snowfakery_mcp.core.assets import examples_root, iter_files, safe_relpath
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.text import read_text_utf8
+from snowfakery_mcp.core.types import ExampleListResult, ExampleResult
+
+_DISCOVERY_ANNOTATIONS = ToolAnnotations(readOnlyHint=True, idempotentHint=True)
 
 
-def register_example_tools(mcp: FastMCP, paths: WorkspacePaths) -> None:
+def register_example_tools(mcp: FastMCP) -> None:
     """Register tools for listing and fetching bundled Snowfakery examples."""
 
-    @mcp.tool(tags={"discovery", "examples"})
-    def list_examples(prefix: str | None = None) -> dict[str, Any]:
+    @mcp.tool(
+        tags={"discovery", "examples"},
+        annotations=_DISCOVERY_ANNOTATIONS,
+        version="1",
+    )
+    def list_examples(prefix: str | None = None, *, ctx: Context) -> ExampleListResult:
         """List available Snowfakery example recipe files.
 
         Returns a list of example recipe filenames from the bundled examples.
         Use prefix to filter results (e.g., "salesforce" for Salesforce examples).
         """
 
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = examples_root(paths)
         names = iter_files(root, suffixes=[".yml"])
         if prefix is not None:
             names = [n for n in names if n.startswith(prefix)]
         return {"examples": names}
 
-    @mcp.tool(tags={"discovery", "examples"})
-    def get_example(name: str) -> dict[str, Any]:
+    @mcp.tool(
+        tags={"discovery", "examples"},
+        annotations=_DISCOVERY_ANNOTATIONS,
+        version="1",
+    )
+    def get_example(name: str, ctx: Context) -> ExampleResult:
         """Fetch a Snowfakery example recipe by name.
 
         Returns the full text of the specified example recipe.
         Use list_examples first to see available examples.
         """
 
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = examples_root(paths)
         node: Path | Traversable
         if isinstance(root, Path):

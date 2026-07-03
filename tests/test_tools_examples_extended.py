@@ -1,157 +1,100 @@
+"""Unit-level branch coverage for tools/examples.py, driven through a real
+FastMCP server instance and a real fastmcp.Client (in-memory transport) instead
+of a MagicMock(spec=FastMCP) decorator-capture harness.
+
+Calling the real, decorator-registered get_example tool via Client exercises
+FastMCP's actual argument validation and exception-to-CallToolResult
+conversion, including real WorkspacePaths.ensure_within() path-safety checks -
+none of which a captured raw function call would exercise.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from fastmcp import FastMCP
+from fastmcp import Client, FastMCP
 
+from conftest import lifespan_stub
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.tools.examples import register_example_tools
 
 
-@pytest.fixture
-def mock_mcp_tools():
-    mcp = MagicMock(spec=FastMCP)
-    tools = {}
-
-    def tool_decorator(**kwargs):
-        def decorator(func):
-            tools[func.__name__] = func
-            return func
-
-        return decorator
-
-    mcp.tool.side_effect = tool_decorator
-    return mcp, tools
-
-
-@pytest.fixture
-def mock_paths(tmp_path):
-    # Create a mock workspace
-    workspace_root = tmp_path / "workspace"
-    workspace_root.mkdir()
-    paths = MagicMock(spec=WorkspacePaths)
-    paths.root = workspace_root
-
-    # helper for ensure_within
-    def ensure_within(base, path):
-        return path
-
-    paths.ensure_within.side_effect = ensure_within
-
-    return paths
-
-
-def test_get_example_workspace_path(mock_mcp_tools, mock_paths):
-    """Test get_example when examples are in the workspace."""
-    mcp, tools = mock_mcp_tools
-    register_example_tools(mcp, mock_paths)
-    get_example = tools["get_example"]
-
-    # Mock examples_root to be a Path inside workspace
-    examples_dir = mock_paths.root / "examples"
-    examples_dir.mkdir()
+@pytest.mark.anyio
+async def test_get_example_workspace_path(tmp_path: Path) -> None:
+    """get_example reads from the real submodule examples dir inside the workspace,
+    exercising the real WorkspacePaths.ensure_within() path-safety check."""
+    root = tmp_path / "workspace"
+    examples_dir = root / "Snowfakery" / "examples"
+    examples_dir.mkdir(parents=True)
     (examples_dir / "test.yml").write_text("content")
 
-    with patch("snowfakery_mcp.tools.examples.examples_root", return_value=examples_dir):
-        # Case 1: File exists
-        result = get_example("test.yml")
-        assert result["content"] == "content"
-        assert result["path"] == str(examples_dir / "test.yml")
+    paths = WorkspacePaths(root=root)
+    mcp = FastMCP("test", lifespan=lifespan_stub(paths))
+    register_example_tools(mcp)
 
-        # Case 2: File missing
-        with pytest.raises(FileNotFoundError):
-            get_example("missing.yml")
+    async with Client(mcp) as client:
+        result = await client.call_tool("get_example", {"name": "test.yml"})
+        # get_example now advertises a real ExampleResult output schema (Phase
+        # 6), so the client parses structured_content into a typed dataclass
+        # instead of a plain dict - attribute access, not subscript.
+        assert result.data.content == "content"
+        assert result.data.path == str(examples_dir / "test.yml")
 
-
-def test_get_example_bundled_path_outside_workspace(mock_mcp_tools, mock_paths):
-    """Test get_example when examples are bundled files (Path) outside workspace."""
-    mcp, tools = mock_mcp_tools
-    register_example_tools(mcp, mock_paths)
-    get_example = tools["get_example"]
-
-    # Mock examples_root to be a Path OUTSIDE workspace.
-    # We mock is_relative_to to simulate a path outside the workspace,
-    # so it doesn't matter if it exists physically for that check.
-    # BUT the code uses .resolve() so we better use a real path.
-    # Let's use a separate temp dir.
-
-    import tempfile
-
-    with tempfile.TemporaryDirectory() as td:
-        external_root = Path(td)
-        (external_root / "test.yml").write_text("external content")
-        (external_root / "subdir").mkdir()
-
-        # We need to ensure it's NOT relative to workspace
-        # mock_paths.root is likely in /tmp/... too, so they are siblings.
-
-        with patch("snowfakery_mcp.tools.examples.examples_root", return_value=external_root):
-            # Case 1: Valid file
-            result = get_example("test.yml")
-            assert result["content"] == "external content"
-            assert result["path"] == "bundled:snowfakery_mcp/bundled_examples/test.yml"
-
-            # Case 2: Directory
-            with pytest.raises(IsADirectoryError):
-                get_example("subdir")
-
-            # Case 3: Missing
-            with pytest.raises(FileNotFoundError):
-                get_example("missing.yml")
+        missing = await client.call_tool(
+            "get_example", {"name": "missing.yml"}, raise_on_error=False
+        )
+        assert missing.is_error is True
 
 
-def test_get_example_traversable(mock_mcp_tools, mock_paths):
-    """Test get_example when examples_root returns a Traversable (zip/package)."""
-    mcp, tools = mock_mcp_tools
-    register_example_tools(mcp, mock_paths)
-    get_example = tools["get_example"]
+@pytest.mark.anyio
+async def test_get_example_bundled_path_outside_workspace(tmp_path: Path) -> None:
+    """get_example serves content when examples_root() resolves to a real
+    filesystem Path that lives outside the configured workspace root."""
+    root = tmp_path / "workspace"
+    root.mkdir()
+    paths = WorkspacePaths(root=root)
+    mcp = FastMCP("test", lifespan=lifespan_stub(paths))
+    register_example_tools(mcp)
 
-    # Mock Traversable
-    # We can use a Mock object that acts like Traversable
-    mock_root = MagicMock()
-    # It is NOT an instance of Path
+    external_root = tmp_path / "external"
+    external_root.mkdir()
+    (external_root / "test.yml").write_text("external content")
+    (external_root / "subdir").mkdir()
 
-    # Setup mock file node
-    mock_file = MagicMock()
-    mock_file.is_dir.return_value = False
-    mock_file.is_file.return_value = True
-    # read_text is not called directly, read_text_utf8 is used which handles Path or Traversable
-    # We should patch read_text_utf8 to avoid dealing with open() mocks
+    with patch("snowfakery_mcp.tools.examples.examples_root", return_value=external_root):
+        async with Client(mcp) as client:
+            result = await client.call_tool("get_example", {"name": "test.yml"})
+            assert result.data.content == "external content"
+            assert result.data.path == "bundled:snowfakery_mcp/bundled_examples/test.yml"
 
-    # Setup mock dir node
-    mock_dir = MagicMock()
-    mock_dir.is_dir.return_value = True
+            directory_result = await client.call_tool(
+                "get_example", {"name": "subdir"}, raise_on_error=False
+            )
+            assert directory_result.is_error is True
 
-    # Setup mock missing node
-    mock_missing = MagicMock()
-    mock_missing.is_dir.return_value = False
-    mock_missing.is_file.return_value = False
+            missing_result = await client.call_tool(
+                "get_example", {"name": "missing.yml"}, raise_on_error=False
+            )
+            assert missing_result.is_error is True
 
-    # joinpath logic
-    def joinpath(*parts):
-        if parts == ("test.yml",):
-            return mock_file
-        if parts == ("subdir",):
-            return mock_dir
-        return mock_missing
 
-    mock_root.joinpath.side_effect = joinpath
+@pytest.mark.anyio
+async def test_get_example_traversable_bundled(tmp_path: Path) -> None:
+    """get_example reads from the real bundled Traversable when no submodule
+    examples directory exists (installed-wheel mode)."""
+    paths = WorkspacePaths(root=tmp_path)
+    mcp = FastMCP("test", lifespan=lifespan_stub(paths))
+    register_example_tools(mcp)
 
-    with patch("snowfakery_mcp.tools.examples.examples_root", return_value=mock_root):
-        with patch(
-            "snowfakery_mcp.tools.examples.read_text_utf8", return_value="traversable content"
-        ):
-            # Case 1: Valid file
-            result = get_example("test.yml")
-            assert result["content"] == "traversable content"
-            assert result["path"] == "bundled:snowfakery_mcp/bundled_examples/test.yml"
+    async with Client(mcp) as client:
+        # test_alpha.yml ships in snowfakery_mcp/bundled_examples/.
+        result = await client.call_tool("get_example", {"name": "test_alpha.yml"})
+        assert len(result.data.content) > 0
+        assert result.data.path == "bundled:snowfakery_mcp/bundled_examples/test_alpha.yml"
 
-            # Case 2: Directory
-            with pytest.raises(IsADirectoryError):
-                get_example("subdir")
-
-            # Case 3: Missing
-            with pytest.raises(FileNotFoundError):
-                get_example("missing.yml")
+        missing_result = await client.call_tool(
+            "get_example", {"name": "missing.yml"}, raise_on_error=False
+        )
+        assert missing_result.is_error is True

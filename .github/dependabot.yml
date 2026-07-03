@@ -6,3 +6,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+
+  # Keep Python dependencies (managed via uv/pyproject.toml + uv.lock) fresh,
+  # including proposing future fastmcp majors instead of requiring a manual trigger.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

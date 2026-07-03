@@ -13,7 +13,7 @@ from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 
 from snowfakery_mcp.core.assets import (
     docs_root,
@@ -25,11 +25,13 @@ from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.text import read_text_utf8
 
 
-def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
+def register_static_resources(mcp: FastMCP) -> None:
     """Register read-only resources like schema, docs, and bundled examples."""
 
-    @mcp.resource("snowfakery://schema/recipe-jsonschema")
-    def recipe_schema_resource() -> str:
+    @mcp.resource("snowfakery://schema/recipe-jsonschema", mime_type="application/json")
+    def recipe_schema_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
+
         # Prefer the Snowfakery submodule if present (dev mode), but fall back
         # to the bundled copy when installed from a wheel or when submodules
         # are not checked out in CI.
@@ -44,38 +46,45 @@ def register_static_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
         )
 
     @mcp.resource("snowfakery://docs/index")
-    def docs_index_resource() -> str:
+    def docs_index_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("index.md"))
 
     @mcp.resource("snowfakery://docs/extending")
-    def docs_extending_resource() -> str:
+    def docs_extending_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("extending.md"))
 
     @mcp.resource("snowfakery://docs/salesforce")
-    def docs_salesforce_resource() -> str:
+    def docs_salesforce_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("salesforce.md"))
 
     @mcp.resource("snowfakery://docs/architecture")
-    def docs_architecture_resource() -> str:
+    def docs_architecture_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("arch", "ArchIndex.md"))
 
     @mcp.resource("snowfakery://docs/embedding")
-    def docs_embedding_resource() -> str:
+    def docs_embedding_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = docs_root(paths)
         return read_text_utf8(root.joinpath("embedding.md"))
 
     @mcp.resource("snowfakery://examples/list")
-    def examples_list_resource() -> str:
+    def examples_list_resource(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = examples_root(paths)
         names = iter_files(root, suffixes=[".yml"])
         return json.dumps({"examples": names}, indent=2)
 
     @mcp.resource("snowfakery://examples/{name*}")
-    def example_resource(name: str) -> str:
+    def example_resource(name: str, ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
         root = examples_root(paths)
         node: Path | Traversable
         # If the examples root is inside the configured workspace root (e.g. the
