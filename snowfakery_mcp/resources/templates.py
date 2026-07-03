@@ -5,16 +5,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.text import read_text_utf8
 
 
-def register_template_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
+def register_template_resources(mcp: FastMCP) -> None:
     """Register community recipe templates as resources."""
 
-    def _get_templates_root() -> Path | None:
+    def _get_templates_root(paths: WorkspacePaths) -> Path | None:
         # Check for the templates directory in the workspace root
         candidate = paths.root / "Snowfakery-Recipe-Templates" / "snowfakery_samples"
         if candidate.exists() and candidate.is_dir():
@@ -22,8 +22,9 @@ def register_template_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
         return None
 
     @mcp.resource("snowfakery://templates/list")
-    def list_templates() -> str:
-        root = _get_templates_root()
+    def list_templates(ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
+        root = _get_templates_root(paths)
         if not root:
             return json.dumps({"templates": [], "note": "Templates directory not found"})
 
@@ -39,20 +40,19 @@ def register_template_resources(mcp: FastMCP, paths: WorkspacePaths) -> None:
 
         return json.dumps({"templates": sorted(files)}, indent=2)
 
-    @mcp.resource("snowfakery://templates/{path_str}")
-    def get_template(path_str: str) -> str:
-        root = _get_templates_root()
+    @mcp.resource("snowfakery://templates/{path_str*}")
+    def get_template(path_str: str, ctx: Context) -> str:
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
+        root = _get_templates_root(paths)
         if not root:
             raise FileNotFoundError("Templates directory not found")
 
-        # Security check: ensure the requested path is inside the templates root
-        # path_str might contain forward slashes even on Windows due to URI format
-
-        # Normative path construction
-        target_path = (root / path_str).resolve()
-
+        # Security check: ensure the requested path is inside the templates root.
+        # path_str might contain forward slashes even on Windows due to URI format.
+        # Reuse the same path-traversal helper resources/runs.py already uses,
+        # instead of reimplementing resolve()/relative_to() here.
         try:
-            target_path.relative_to(root.resolve())
+            target_path = paths.ensure_within(root, root / path_str)
         except ValueError as e:
             raise ValueError(f"Access denied: {path_str} escapes templates directory") from e
 

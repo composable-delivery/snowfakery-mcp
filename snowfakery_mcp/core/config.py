@@ -8,6 +8,7 @@ from dataclasses import dataclass
 class Config:
     timeout_seconds: int
     max_capture_chars: int
+    preview_chars: int
     max_reps: int
     max_target_count: int
 
@@ -25,6 +26,17 @@ class Config:
                 default=20000,
                 min_value=200,
                 max_value=5_000_000,
+            ),
+            # Default inline preview size for run_recipe(capture_output="preview")
+            # - deliberately much smaller than max_capture_chars (which is only
+            # used for the explicit capture_output="full" opt-in), since the
+            # full output is always available via the run's resource URI
+            # regardless of this setting.
+            preview_chars=_parse_int_env(
+                "SNOWFAKERY_MCP_PREVIEW_CHARS",
+                default=2000,
+                min_value=100,
+                max_value=50_000,
             ),
             max_reps=_parse_int_env(
                 "SNOWFAKERY_MCP_MAX_REPS",

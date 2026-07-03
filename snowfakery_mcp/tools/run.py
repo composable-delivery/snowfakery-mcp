@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from io import StringIO
-from typing import Any
+from typing import Any, Literal
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
+from fastmcp.tools import ToolResult
+from mcp.types import ToolAnnotations
 from snowfakery.api import COUNT_REPS, file_extensions, generate_data
 from snowfakery.data_gen_exceptions import DataGenError
 
 from snowfakery_mcp.core.config import Config
+from snowfakery_mcp.core.errors import tool_error_from_exception
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.snowfakery_app import MCPApplication
-from snowfakery_mcp.core.text import recipe_text_from_input, truncate
-from snowfakery_mcp.core.timeout import OperationTimeout, time_limit
-from snowfakery_mcp.core.types import RunResult, TargetNumber, ToolError
+from snowfakery_mcp.core.text import read_text_utf8, recipe_text_from_input, smart_truncate_output
+from snowfakery_mcp.core.types import RunResult, TargetNumber, tool_output_schema
+
+CaptureMode = Literal["preview", "full", "none"]
 
 
 def _safe_stopping_criteria(
@@ -45,8 +49,41 @@ def _safe_stopping_criteria(
     return (table, count), None
 
 
-def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> None:
-    @mcp.tool(tags={"execution", "generation"})
+def register_run_tool(mcp: FastMCP, timeout_seconds: int) -> None:
+    """Register ``run_recipe``.
+
+    ``timeout_seconds`` is the Phase-4 pre-lifespan carve-out (see
+    ``server.create_app()``): ``@mcp.tool(timeout=...)`` is resolved at
+    decoration time, before any lifespan/request context exists, so it can't
+    be sourced from ``ctx.lifespan_context`` the way ``paths``/``config`` are
+    below. Phase 5 passes it straight to ``@mcp.tool(timeout=timeout_seconds)``,
+    replacing the old SIGALRM-based ``time_limit()`` call that used to wrap
+    ``generate_data()`` below.
+
+    Honest caveat (see FASTMCP3_REFACTOR_PLAN.md Phase 5's risk note,
+    confirmed against the installed fastmcp 3.4.2): ``run_recipe`` is a plain
+    ``def`` function, so FastMCP dispatches it to a worker thread via
+    ``anyio.to_thread.run_sync(..., abandon_on_cancel=False)`` (fastmcp's
+    ``call_sync_fn_in_threadpool``, no override exposed). With
+    ``abandon_on_cancel=False`` (anyio's default), a cancellation delivered
+    to the *awaiting* task while the worker thread is still running is
+    suppressed until the thread finishes on its own — verified directly: a
+    ``@mcp.tool(timeout=0.2)`` sync function doing ``time.sleep(2)`` still
+    returns a normal, successful result after the full 2s, with no timeout
+    error at all. So for this tool, ``timeout=`` does not bound wall-clock
+    time the way SIGALRM was originally intended to (and, per the existing
+    ``time_limit()`` regression test this phase removes, SIGALRM was *also*
+    already a no-op here under fastmcp 3.x's threadpool dispatch — this is a
+    lateral move, not a regression from working protection).
+    """
+
+    @mcp.tool(
+        tags={"execution", "generation"},
+        output_schema=tool_output_schema(RunResult),
+        annotations=ToolAnnotations(readOnlyHint=False, idempotentHint=False),
+        timeout=timeout_seconds,
+        version="1",
+    )
     def run_recipe(
         recipe_path: str | None = None,
         recipe_text: str | None = None,
@@ -55,14 +92,19 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
         reps: int | None = None,
         target_number: TargetNumber | None = None,
         output_format: str = "txt",
-        capture_output: bool = True,
+        capture_output: CaptureMode = "preview",
         strict_mode: bool = True,
         validate_only: bool = False,
         generate_continuation: bool = False,
-    ) -> RunResult:
+        *,
+        ctx: Context,
+    ) -> RunResult | ToolResult:
         """Run a Snowfakery recipe and generate fake data.
 
         Executes the recipe and returns generated output along with artifact URIs.
+        The complete output is always written to disk and available via the
+        returned resource URI regardless of ``capture_output`` - that setting
+        only controls how much of it also comes back inline in this response.
 
         Args:
             recipe_path: Path to recipe file (relative to workspace)
@@ -72,11 +114,19 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
             reps: Number of times to repeat the recipe
             target_number: Generate until table reaches count {"table": "X", "count": N}
             output_format: Output format (txt, json, csv, sql, dot, svg, etc.)
-            capture_output: Include output text in response
+            capture_output: How much generated output to include inline, in
+                addition to the resource: "preview" (default) is a small
+                preview plus output_bytes/record_count so you know how much
+                data exists without paying to see all of it; "full" is the
+                complete output inline, up to the server's max-capture-chars
+                limit; "none" omits inline text entirely.
             strict_mode: Fail on undefined field references
             validate_only: Only validate, don't generate
             generate_continuation: Create continuation file for resuming
         """
+
+        paths: WorkspacePaths = ctx.lifespan_context["paths"]
+        config: Config = ctx.lifespan_context["config"]
 
         text = recipe_text_from_input(
             recipe_path=recipe_path,
@@ -95,7 +145,7 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
         )
 
         out_buf: StringIO | None = None
-        if capture_output and fmt in {"txt", "json", "sql", "dot", "svg", "svgz"}:
+        if capture_output != "none" and fmt in {"txt", "json", "sql", "dot", "svg", "svgz"}:
             out_buf = StringIO()
 
         artifact_name = f"output.{fmt}"
@@ -118,57 +168,55 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
             continuation_path = str(run_dir / "continuation.yml")
 
         try:
-            with time_limit(config.timeout_seconds):
-                kwargs: dict[str, Any] = {
-                    "parent_application": MCPApplication(),
-                    "user_options": dict(options or {}),
-                    "plugin_options": dict(plugin_options or {}),
-                    "output_format": fmt,
-                    "strict_mode": strict_mode,
-                    "validate_only": validate_only,
-                }
-                if target_tuple is not None:
-                    kwargs["target_number"] = target_tuple
-                if output_files:
-                    kwargs["output_files"] = output_files
-                if output_folder is not None:
-                    kwargs["output_folder"] = output_folder
-                if continuation_path is not None:
-                    kwargs["generate_continuation_file"] = continuation_path
+            kwargs: dict[str, Any] = {
+                "parent_application": MCPApplication(),
+                "user_options": dict(options or {}),
+                "plugin_options": dict(plugin_options or {}),
+                "output_format": fmt,
+                "strict_mode": strict_mode,
+                "validate_only": validate_only,
+            }
+            if target_tuple is not None:
+                kwargs["target_number"] = target_tuple
+            if output_files:
+                kwargs["output_files"] = output_files
+            if output_folder is not None:
+                kwargs["output_folder"] = output_folder
+            if continuation_path is not None:
+                kwargs["generate_continuation_file"] = continuation_path
 
-                summary = generate_data(StringIO(text), **kwargs)
-        except DataGenError as e:
-            err: ToolError = {
-                "kind": type(e).__name__,
-                "message": e.message,
-                "filename": e.filename,
-                "line": e.line_num,
-            }
-            return {"run_id": run_id, "ok": False, "error": err, "resources": []}
-        except OperationTimeout as e:
-            timeout_err: ToolError = {
-                "kind": type(e).__name__,
-                "message": str(e),
-                "filename": None,
-                "line": None,
-            }
-            return {
-                "run_id": run_id,
-                "ok": False,
-                "error": timeout_err,
-                "resources": [],
-            }
-        except (OSError, RuntimeError, ValueError) as e:
-            unexpected: ToolError = {
-                "kind": type(e).__name__,
-                "message": str(e),
-                "filename": None,
-                "line": None,
-            }
-            return {"run_id": run_id, "ok": False, "error": unexpected, "resources": []}
+            summary = generate_data(StringIO(text), **kwargs)
+        except (DataGenError, OSError, RuntimeError, ValueError) as e:
+            err = tool_error_from_exception(e)
+            return ToolResult(
+                structured_content={
+                    "run_id": run_id,
+                    "ok": False,
+                    "error": err,
+                    "resources": [],
+                },
+                is_error=True,
+            )
 
-        captured = out_buf.getvalue() if out_buf is not None else ""
-        captured, truncated_flag = truncate(captured, max_chars=config.max_capture_chars)
+        output_bytes = artifact_path.stat().st_size if artifact_path.exists() else 0
+
+        stdout_text = ""
+        stdout_truncated = False
+        record_count: int | None = None
+        if capture_output != "none" and out_buf is not None:
+            # Some output formats (image/diagram renders piped through
+            # graphviz) close their file-like output target once rendering
+            # finishes, so out_buf.getvalue() would raise ValueError("I/O
+            # operation on closed file") - fall back to reading the artifact
+            # straight off disk for those instead of crashing (the file
+            # write itself always succeeds independent of this).
+            full_captured = "" if out_buf.closed else out_buf.getvalue()
+            if not full_captured and artifact_path.exists():
+                full_captured = read_text_utf8(artifact_path)
+            budget = config.max_capture_chars if capture_output == "full" else config.preview_chars
+            stdout_text, stdout_truncated, record_count = smart_truncate_output(
+                full_captured, output_format=fmt, max_chars=budget
+            )
 
         resources: list[str] = []
         if artifact_path.exists():
@@ -182,8 +230,10 @@ def register_run_tool(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> No
             "run_id": run_id,
             "ok": True,
             "output_format": fmt,
-            "stdout_text": captured,
-            "stdout_truncated": truncated_flag,
+            "stdout_text": stdout_text,
+            "stdout_truncated": stdout_truncated,
+            "output_bytes": output_bytes,
+            "record_count": record_count,
             "resources": resources,
             "summary": str(summary),
         }

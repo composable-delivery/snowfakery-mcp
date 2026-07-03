@@ -1,16 +1,39 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from fastmcp import Client
+from fastmcp import Client, FastMCP
 
+from snowfakery_mcp.core.config import Config
+from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.server import mcp as server_app
 
 if TYPE_CHECKING:
     pass
+
+
+def lifespan_stub(paths: WorkspacePaths, config: Config | None = None) -> Any:
+    """Build a ``lifespan=`` callable yielding ``{"paths": ..., "config": ...}``.
+
+    Phase 4 (see ``FASTMCP3_REFACTOR_PLAN.md``) moved every registered tool/
+    resource to read ``paths``/``config`` from ``ctx.lifespan_context`` at
+    call time instead of a closure captured at registration time. Tests that
+    construct a real ``fastmcp.FastMCP("test")`` instance directly (instead of
+    going through ``snowfakery_mcp.server.create_app()``) need to supply a
+    minimal stand-in lifespan so that context dict is populated the same way.
+    """
+
+    resolved_config = config if config is not None else Config.from_env()
+
+    @asynccontextmanager
+    async def _lifespan(_app: FastMCP) -> AsyncIterator[dict[str, Any]]:
+        yield {"paths": paths, "config": resolved_config}
+
+    return _lifespan
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

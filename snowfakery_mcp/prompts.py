@@ -10,8 +10,12 @@ def register_prompts(mcp: FastMCP) -> None:
     async def author_recipe(goal: str, ctx: Context) -> str:
         """Create a new Snowfakery recipe from a description of what data to generate."""
         try:
-            schema_content = await ctx.read_resource("snowfakery://schema/recipe-jsonschema")
-            schema_section = f"\nSnowfakery Recipe Schema (partial/full):\n{schema_content}\n"
+            schema_result = await ctx.read_resource("snowfakery://schema/recipe-jsonschema")
+            schema_text = "\n".join(
+                item.content if isinstance(item.content, str) else item.content.decode("utf-8")
+                for item in schema_result.contents
+            )
+            schema_section = f"\nSnowfakery Recipe Schema (partial/full):\n{schema_text}\n"
         except Exception:
             schema_section = "Note: Could not load schema automatically. Please use the tool to fetch it if needed."
 

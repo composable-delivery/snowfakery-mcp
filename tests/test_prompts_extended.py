@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastmcp import Context
+from fastmcp import Client, Context
 
 from snowfakery_mcp.prompts import register_prompts
 
@@ -44,6 +45,27 @@ async def test_author_recipe_schema_failure(mock_mcp):
 
     assert "Note: Could not load schema automatically" in result
     assert "Goal:\nMy Goal" in result
+
+
+@pytest.mark.anyio
+async def test_author_recipe_includes_real_schema_json(mcp_client: Client[Any]) -> None:
+    """Drive author_recipe through the real mcp_client fixture end-to-end.
+
+    Regression test for the ctx.read_resource() interpolation bug: the
+    rendered prompt text must contain the actual schema JSON (e.g. a
+    "$schema" key), not a dataclass/list repr of the resource contents.
+    """
+    result = await mcp_client.get_prompt("author_recipe", {"goal": "Generate Accounts"})
+
+    assert result.messages, "Expected at least one rendered prompt message"
+    content = result.messages[0].content
+    text = content.text if hasattr(content, "text") else str(content)
+
+    assert "Goal:" in text
+    assert "Generate Accounts" in text
+    assert '"$schema"' in text
+    assert "ResourceContent(" not in text
+    assert "ReadResourceContents" not in text
 
 
 @pytest.mark.anyio

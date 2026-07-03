@@ -1,15 +1,53 @@
 from __future__ import annotations
 
+from typing import cast
+
 from fastmcp import Context, FastMCP
-from mcp.types import SamplingMessage, TextContent
+from fastmcp.tools import ToolResult
+from mcp.types import SamplingMessage, TextContent, ToolAnnotations
 
 from snowfakery_mcp.core.config import Config
 from snowfakery_mcp.core.paths import WorkspacePaths
 from snowfakery_mcp.core.validate import validate_recipe_logic
 
 
-def register_agentic_tools(mcp: FastMCP, paths: WorkspacePaths, config: Config) -> None:
-    @mcp.tool(tags={"authoring", "agentic"})
+def register_agentic_tools(mcp: FastMCP, timeout_seconds: int) -> None:
+    """Register ``iterative_recipe_gen``.
+
+    ``timeout_seconds`` is the Phase-4 pre-lifespan carve-out (see
+    ``server.create_app()``): ``@mcp.tool(timeout=...)`` is resolved at
+    decoration time, before any lifespan/request context exists. Phase 5
+    wires it straight into the decorator below, closing the gap that this
+    tool previously had *zero* timeout coverage (unlike ``run_recipe``/
+    ``generate_mapping``/``validate_recipe``, which at least wrapped their
+    ``generate_data()`` call in the old SIGALRM-based ``time_limit()``).
+
+    Unlike those three (plain ``def``, dispatched to a worker thread, where
+    ``timeout=`` cannot actually preempt a stuck ``generate_data()`` call —
+    see ``tools/run.py``'s docstring), ``iterative_recipe_gen`` is
+    ``async def`` and runs directly on the event loop, so ``timeout=``
+    *does* genuinely cancel it while it's awaiting the real checkpoint
+    inside ``ctx.sample()`` (confirmed directly against fastmcp 3.4.2: a
+    slow/unresponsive sampling round-trip is cancelled promptly at the
+    configured deadline, surfacing as an ``McpError``-shaped tool failure
+    instead of hanging indefinitely).
+
+    ``annotations=ToolAnnotations(openWorldHint=True)`` (Phase 6) flags that
+    this tool interacts with an "open world" entity (the client's LLM, via
+    ``ctx.sample()``) rather than a closed, fully-modeled system. Its return
+    type deliberately stays a bare ``str`` in this phase — introducing a
+    typed ``RecipeGenResult`` is scoped as a separate, higher-risk follow-up
+    PR (see ``FASTMCP3_REFACTOR_PLAN.md`` Phase 6, step 4) since any client
+    pattern-matching on the current ``"Error during generation:"`` text
+    prefix would need updating, unlike every other change in this phase.
+    """
+
+    @mcp.tool(
+        tags={"authoring", "agentic"},
+        annotations=ToolAnnotations(openWorldHint=True),
+        timeout=timeout_seconds,
+        version="1",
+    )
     async def iterative_recipe_gen(
         goal: str,
         max_iterations: int = 3,
@@ -21,6 +59,14 @@ def register_agentic_tools(mcp: FastMCP, paths: WorkspacePaths, config: Config) 
         validates it, and if it fails, asks the LLM to fix it.
         Returns the final valid recipe or the last attempt.
         """
+        # `_iterative_recipe_gen_impl` itself is the source of truth for the
+        # "ctx is None" error branch, checked before paths/config are ever
+        # touched - so it's safe to source them from ctx.lifespan_context
+        # (via a `cast`, since that dict access can't be typed precisely)
+        # only when ctx is actually present.
+        lifespan_context = ctx.lifespan_context if ctx is not None else {}
+        paths = cast(WorkspacePaths, lifespan_context.get("paths"))
+        config = cast(Config, lifespan_context.get("config"))
         return await _iterative_recipe_gen_impl(goal, max_iterations, ctx, paths, config)
 
 
@@ -47,9 +93,15 @@ async def _iterative_recipe_gen_impl(
     # Fetch schema to provide context
     try:
         schema = await ctx.read_resource("snowfakery://schema/recipe-jsonschema")
+        schema_text = "\n".join(
+            item.content if isinstance(item.content, str) else item.content.decode("utf-8")
+            for item in schema.contents
+        )
         first_content = messages[0].content
         if isinstance(first_content, TextContent):
-            first_content.text += f"\n\nSchema Context:\n{schema}"[:2000]  # Truncate if too long
+            first_content.text += f"\n\nSchema Context:\n{schema_text}"[
+                :2000
+            ]  # Truncate if too long
     except Exception:
         pass
 
@@ -66,22 +118,8 @@ async def _iterative_recipe_gen_impl(
                 system_prompt="You are a Snowfakery expert. Output only valid YAML.",
             )
 
-            # Extract text content (simplistic extraction)
-            # result is likely CreateMessageResult
-            content = getattr(result, "content", None)
-            if content is None:
-                # Fallback if result is just a string (some fastmcp versions might do this?)
-                content = str(result)
-
-            # Normalize content to string
-            if hasattr(content, "text"):
-                current_recipe = content.text
-            elif isinstance(content, list):  # List of content blocks
-                current_recipe = "\n".join([c.text for c in content if hasattr(c, "text")])
-            elif isinstance(content, str):
-                current_recipe = content
-            else:
-                current_recipe = str(content)
+            # Context.sample() returns a SamplingResult(.text/.result/.history).
+            current_recipe = (result.text or "").strip()
 
             # Strip markdown blocks if present
             if current_recipe.strip().startswith("```"):
@@ -96,9 +134,16 @@ async def _iterative_recipe_gen_impl(
 
             current_recipe = current_recipe.strip()
 
-            # Validate
-            validation = validate_recipe_logic(
+            # Validate. validate_recipe_logic() returns a plain ValidateResult dict
+            # on success but a ToolResult(is_error=True) on failure (Phase 3's
+            # ToolResult(is_error=...) contract) — normalize both to a dict here.
+            raw_validation = validate_recipe_logic(
                 paths=paths, config=config, recipe_text=current_recipe
+            )
+            validation = (
+                raw_validation.structured_content or {"valid": False, "errors": []}
+                if isinstance(raw_validation, ToolResult)
+                else raw_validation
             )
 
             if validation["valid"]:

@@ -17,6 +17,7 @@ class TestConfigFromEnv:
             assert config.max_reps == 10
             assert config.max_target_count == 1000
             assert config.max_capture_chars == 20000
+            assert config.preview_chars == 2000
             assert config.timeout_seconds == 30
 
     def test_custom_config_values(self) -> None:
@@ -25,6 +26,7 @@ class TestConfigFromEnv:
             "SNOWFAKERY_MCP_MAX_REPS": "50",
             "SNOWFAKERY_MCP_MAX_TARGET_COUNT": "500",
             "SNOWFAKERY_MCP_MAX_CAPTURE_CHARS": "50000",
+            "SNOWFAKERY_MCP_PREVIEW_CHARS": "5000",
             "SNOWFAKERY_MCP_TIMEOUT_SECONDS": "60",
         }
         with patch.dict("os.environ", env, clear=False):
@@ -32,7 +34,16 @@ class TestConfigFromEnv:
             assert config.max_reps == 50
             assert config.max_target_count == 500
             assert config.max_capture_chars == 50000
+            assert config.preview_chars == 5000
             assert config.timeout_seconds == 60
+
+    def test_preview_chars_clamped_to_range(self) -> None:
+        """preview_chars follows the same clamp-not-raise pattern as every other limit."""
+        with patch.dict("os.environ", {"SNOWFAKERY_MCP_PREVIEW_CHARS": "1"}, clear=False):
+            assert Config.from_env().preview_chars == 100  # clamped up to min_value
+
+        with patch.dict("os.environ", {"SNOWFAKERY_MCP_PREVIEW_CHARS": "999999999"}, clear=False):
+            assert Config.from_env().preview_chars == 50_000  # clamped down to max_value
 
     def test_invalid_int_env_vars_ignored(self) -> None:
         """Test that invalid integers in env vars are ignored."""
