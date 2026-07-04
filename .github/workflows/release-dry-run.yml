@@ -3,6 +3,9 @@ name: Release Dry Run
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   dry-run:
     runs-on: ubuntu-latest

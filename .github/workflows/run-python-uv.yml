@@ -32,6 +32,9 @@ on:
         description: Optional Codecov token (required for private repos)
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   run:
     runs-on: ubuntu-latest

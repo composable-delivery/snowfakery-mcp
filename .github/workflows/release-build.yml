@@ -7,6 +7,11 @@ on:
         description: Derived release version (PEP 440)
         value: ${{ jobs.build.outputs.version }}
 
+permissions:
+  contents: read
+  attestations: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
