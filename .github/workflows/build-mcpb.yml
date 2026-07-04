@@ -20,6 +20,9 @@ on:
         description: "Filename of the built .mcpb file"
         value: ${{ jobs.build.outputs.bundle-name }}
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build MCPB
